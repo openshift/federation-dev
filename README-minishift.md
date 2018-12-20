@@ -59,18 +59,18 @@ The steps in this walkthrough were tested with:
 ~~~sh
 minishift version
 
-minishift v1.25.0+90fb23e
+minishift v1.28.0+48e89ed
 ~~~
 
 <a id="markdown-install-the-kubefed2-binary" name="install-the-kubefed2-binary"></a>
 ## Install the kubefed2 binary
 
 The `kubefed2` tool manages federated cluter registration. Download the
-0.0.2-rc.1 release and unpack it into a diretory in your PATH (the
+0.0.4 release and unpack it into a diretory in your PATH (the
 example uses `$HOME/bin`):
 
 ~~~sh
-curl -LOs https://github.com/kubernetes-sigs/federation-v2/releases/download/v0.0.2/kubefed2.tar.gz
+curl -LOs https://github.com/kubernetes-sigs/federation-v2/releases/download/v0.0.4/kubefed2.tar.gz
 tar xzf kubefed2.tar.gz -C ~/bin
 rm -f kubefed2.tar.gz
 ~~~
@@ -80,7 +80,7 @@ Verify that `kubefed2` is working:
 ~~~sh
 kubefed2 version
 
-kubefed2 version: version.Info{Version:"v0.0.2", GitCommit:"8b3ee98212d0457ae3571d2e1737a462470708fe", GitTreeState:"clean", BuildDate:"2018-10-22T15:03:32Z", GoVersion:"go1.10.3", Compiler:"gc", Platform:"linux/amd64"}
+kubefed2 version: version.Info{Version:"v0.0.4", GitCommit:"2cdf5d37240d9b8b33e2715deb75fbb7f9e003ad", GitTreeState:"clean", BuildDate:"2018-12-10T23:03:18Z", GoVersion:"go1.10.3", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
 
 <a id="markdown-download-the-example-code" name="download-the-example-code"></a>
@@ -89,8 +89,8 @@ kubefed2 version: version.Info{Version:"v0.0.2", GitCommit:"8b3ee98212d0457ae357
 Clone the demo code to your local machine:
 
 ~~~sh
-git clone https://github.com/openshift/federation-dev.git
-cd federation-dev
+git clone --recurse-submodules https://github.com/openshift/federation-dev.git
+cd federation-dev/
 ~~~
 
 <a id="markdown-federation-deployment" name="federation-deployment"></a>
@@ -104,8 +104,8 @@ Start two minishift clusters with OKD version 3.11 called `cluster1` and
 walkthrough, so it's recommended that you adhere to them:
 
 ~~~sh
-minishift start --profile cluster1 --openshift-version v3.11.0
-minishift start --profile cluster2 --openshift-version v3.11.0
+minishift start --profile cluster1 
+minishift start --profile cluster2 
 ~~~
 
 Each minishift invocation will generate output as it progresses and will
@@ -188,22 +188,34 @@ oc create clusterrolebinding federation-admin \
     --serviceaccount="federation-system:default"
 ~~~
 
-Deploy the [cluster registry](https://github.com/kubernetes/cluster-registry) and the namespace where clusters are registered
-(`kube-multicluster-public`):
+Change directory to Federation V2 repo (The repository submodule is already pointing to `tag/v0.0.4`):
 
 ~~~sh
-oc create -f cluster-registry.yaml
+cd federation-v2/
+~~~
+
+Create the required namespaces:
+
+~~~sh
+oc create ns federation-system
+oc create ns kube-multicluster-public
 ~~~
 
 Deploy the federation control plane and its associated Custom Resource Definitions ([CRDs](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)):
 
 ~~~sh
-oc create -f federation.yaml
+oc -n federation-system apply --validate=false -f hack/install-latest.yaml
+~~~
+
+Deploy the [cluster registry](https://github.com/kubernetes/cluster-registry) and the namespace where clusters are registered
+(`kube-multicluster-public`):
+
+~~~sh
+oc apply --validate=false -f vendor/k8s.io/cluster-registry/cluster-registry-crd.yaml
 ~~~
 
 The above created:
 
--   The `federation-system` namespace to hold the various associated resources
 -   The federation CRDs
 -   A [StatefulSet](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) that deploys the federation controller, and a [Service](https://kubernetes.io/docs/concepts/services-networking/service/) for it.
 
@@ -211,8 +223,10 @@ Now deploy the CRDs that determine which Kubernetes resources are federated acro
 the clusters:
 
 ~~~sh
-oc project federation-system
-oc create -n federation-system -f federatedtypes/
+for filename in ./config/federatedirectives/*.yaml
+do
+  kubefed2 federate enable -f "${filename}" --federation-namespace=federation-system
+done
 ~~~
 
 After a short while the federation controller manager pod is running:
@@ -242,12 +256,16 @@ Now use the `kubefed2` tool to register (*join*) the two clusters:
 ~~~sh
 kubefed2 join cluster1 \
             --host-cluster-context cluster1 \
+            --cluster-context cluster1 \
             --add-to-registry \
-            --v=2
+            --v=2 \
+            --federation-namespace=federation-system
 kubefed2 join cluster2 \
             --host-cluster-context cluster1 \
+            --cluster-context cluster2 \
             --add-to-registry \
-            --v=2
+            --v=2 \
+            --federation-namespace=federation-system
 ~~~
 
 Note that the names of the clusters (`cluster1` and `cluster2`) in the commands above are a refence to the contexts configured in the `oc` client. For this to work as expected you need to make sure that the [client contexts](#configure-client-context-for-cluster-admin-access) have been properly configured with the right access levels and context names. The `--cluster-context` option for `kubefed2 join` can be used to override the refernce to the client context configuration. When the option is not present, like in the commands above, `kubefed2` uses the cluster name to identify the client context.
@@ -260,58 +278,58 @@ oc describe federatedclusters -n federation-system
 
 Name:         cluster1
 Namespace:    federation-system
-
+Labels:       <none>
+Annotations:  <none>
 API Version:  core.federation.k8s.io/v1alpha1
 Kind:         FederatedCluster
 Metadata:
-  Cluster Name:        
-  Creation Timestamp:  2018-10-04T11:09:54Z
-  Finalizers:
-  Generation:  1
-  Owner References:
-  Resource Version:  13677
-  Self Link:         /apis/core.federation.k8s.io/v1alpha1/namespaces/federation-system/federatedclusters/cluster1
-  UID:               0578fc01-c7c6-11e8-845c-525400fb0b2b
+  Creation Timestamp:  2018-12-20T14:50:26Z
+  Generation:          1
+  Resource Version:    10134
+  Self Link:           /apis/core.federation.k8s.io/v1alpha1/namespaces/federation-system/federatedclusters/cluster1
+  UID:                 967a9f25-0466-11e9-b627-5254005e3d82
 Spec:
   Cluster Ref:
     Name:  cluster1
   Secret Ref:
-    Name:  cluster1-rrlzf
+    Name:  cluster1-rd7ct
 Status:
   Conditions:
-    Last Probe Time:       2018-10-04T11:11:55Z
-    Last Transition Time:  2018-10-04T11:09:55Z
+    Last Probe Time:       2018-12-20T14:51:02Z
+    Last Transition Time:  2018-12-20T14:51:02Z
     Message:               /healthz responded with ok
     Reason:                ClusterReady
     Status:                True
     Type:                  Ready
+Events:                    <none>
+
+
 Name:         cluster2
 Namespace:    federation-system
-
+Labels:       <none>
+Annotations:  <none>
 API Version:  core.federation.k8s.io/v1alpha1
 Kind:         FederatedCluster
 Metadata:
-  Cluster Name:        
-  Creation Timestamp:  2018-10-04T11:11:09Z
-  Finalizers:
-  Generation:  1
-  Owner References:
-  Resource Version:  13678
-  Self Link:         /apis/core.federation.k8s.io/v1alpha1/namespaces/federation-system/federatedclusters/cluster2
-  UID:               324b8356-c7c6-11e8-845c-525400fb0b2b
+  Creation Timestamp:  2018-12-20T14:50:34Z
+  Generation:          1
+  Resource Version:    10140
+  Self Link:           /apis/core.federation.k8s.io/v1alpha1/namespaces/federation-system/federatedclusters/cluster2
+  UID:                 9ab9378a-0466-11e9-b627-5254005e3d82
 Spec:
   Cluster Ref:
     Name:  cluster2
   Secret Ref:
-    Name:  cluster2-h5xgh
+    Name:  cluster2-fgmch
 Status:
   Conditions:
-    Last Probe Time:       2018-10-04T11:11:55Z
-    Last Transition Time:  2018-10-04T11:11:15Z
+    Last Probe Time:       2018-12-20T14:51:02Z
+    Last Transition Time:  2018-12-20T14:51:02Z
     Message:               /healthz responded with ok
     Reason:                ClusterReady
     Status:                True
     Type:                  Ready
+Events:                    <none>
 ~~~
 
 <a id="markdown-example-application" name="example-application"></a>
@@ -335,7 +353,7 @@ items:
   kind: Namespace
   metadata:
     name: test-namespace
-- apiVersion: core.federation.k8s.io/v1alpha1
+- apiVersion: primitives.federation.k8s.io/v1alpha1
   kind: FederatedNamespacePlacement
   metadata:
     name: test-namespace
@@ -388,6 +406,7 @@ on `cluster2`.
 Instantiate all these federated resources:
 
 ~~~sh
+cd ../
 oc apply -R -f sample-app
 ~~~
 
