@@ -1,0 +1,3 @@
+[submodule "federation-v2"]
+	path = federation-v2
+	url = https://github.com/kubernetes-sigs/federation-v2

@@ -39,7 +39,7 @@ does. Apply the following to the federated cluster example using `oc apply -f`
 apiVersion: v1
 kind: List
 items:
-- apiVersion: core.federation.k8s.io/v1alpha1
+- apiVersion: primitives.federation.k8s.io/v1alpha1
   kind: FederatedIngress
   metadata:
     name: test-ingress
@@ -55,7 +55,7 @@ items:
               backend:
                 serviceName: test-service
                 servicePort: 80
-- apiVersion: core.federation.k8s.io/v1alpha1
+- apiVersion: primitives.federation.k8s.io/v1alpha1
   kind: FederatedIngressPlacement
   metadata:
     name: test-ingress
@@ -114,7 +114,7 @@ and type fields:
 apiVersion: v1
 kind: List
 items:
-- apiVersion: core.federation.k8s.io/v1alpha1
+- apiVersion: primitives.federation.k8s.io/v1alpha1
   kind: FederatedSecret
   metadata:
     name: test-tls
@@ -126,7 +126,7 @@ items:
         tls.key: LS0t....
       kind: Secret
       type: kubernetes.io/tls
-- apiVersion: core.federation.k8s.io/v1alpha1
+- apiVersion: primitives.federation.k8s.io/v1alpha1
   kind: FederatedSecretPlacement
   metadata:
     name: test-tls
@@ -178,7 +178,7 @@ Finally, add a tls entry to the FederatedIngress from earlier. It works to edit 
 apiVersion: v1
 kind: List
 items:
-- apiVersion: core.federation.k8s.io/v1alpha1
+- apiVersion: primitives.federation.k8s.io/v1alpha1
   kind: FederatedIngress
   metadata:
     name: test-ingress
@@ -198,7 +198,7 @@ items:
               backend:
                 serviceName: test-service
                 servicePort: 80
-- apiVersion: core.federation.k8s.io/v1alpha1
+- apiVersion: primitives.federation.k8s.io/v1alpha1
   kind: FederatedIngressPlacement
   metadata:
     name: test-ingress
