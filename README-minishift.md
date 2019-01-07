@@ -268,7 +268,7 @@ kubefed2 join cluster2 \
             --federation-namespace=federation-system
 ~~~
 
-Note that the names of the clusters (`cluster1` and `cluster2`) in the commands above are a refence to the contexts configured in the `oc` client. For this to work as expected you need to make sure that the [client contexts](#configure-client-context-for-cluster-admin-access) have been properly configured with the right access levels and context names. The `--cluster-context` option for `kubefed2 join` can be used to override the refernce to the client context configuration. When the option is not present, like in the commands above, `kubefed2` uses the cluster name to identify the client context.
+Note that the names of the clusters (`cluster1` and `cluster2`) in the commands above are a refence to the contexts configured in the `oc` client. For this to work as expected you need to make sure that the [client contexts](#configure-client-context-for-cluster-admin-access) have been properly configured with the right access levels and context names. The `--cluster-context` option for `kubefed2 join` can be used to override the refernce to the client context configuration. When the option is not present, `kubefed2` uses the cluster name to identify the client context.
 
 Verify that the federated clusters are registered and in a ready state (this
 can take a moment):
