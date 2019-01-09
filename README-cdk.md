@@ -506,7 +506,6 @@ To clean up only the test application run:
 
 ~~~sh
 oc delete ns test-namespace
-oc delete federatednamespaceplacement test-namespace
 ~~~
 
 This leaves the two clusters with federation deployed. If you want to remove everything run:
