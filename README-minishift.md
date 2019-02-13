@@ -20,6 +20,7 @@
     4. [Modify placement](#modify-placement)
 5. [Clean up](#clean-up)
 6. [What’s next?](#whats-next)
+7. [Known Issues](#known-issues)
 
 <!-- /TOC -->
 
@@ -509,3 +510,23 @@ testing, but it has limitations. More advanced aspects of cluster federation
 like managing ingress traffic or storage rely on supporting infrastructure for
 the clusters that is not available in minishift. These will be topics for
 more advanced guides.
+
+<a id="markdown-known-issues" name="known-issues"></a>
+# Known Issues
+
+One issue that has come up while working with this demo is a log entry generated once per minute per cluster over the lack of zone or region labels on the minishift nodes. The error is harmless, but may interfere with finding real issues in the federation-controller-manager logs. An example follows:
+
+~~~
+W0213 01:25:42.586459       1 controller.go:224] Failed to get zones and region for cluster with client {0xc420296960}: Zone name for node localhost not found. No label with key failure-domain.beta.kubernetes.io/zone
+W0213 01:25:42.597726       1 controller.go:224] Failed to get zones and region for cluster with client {0xc4202965a0}: Zone name for node localhost not found. No label with key failure-domain.beta.kubernetes.io/zone
+~~~
+
+The work-around would be to go ahead and label the minishift nodes with some zone and region data, e.g.
+
+~~~sh
+oc --context=cluster1 label node localhost failure-domain.beta.kubernetes.io/region=minishift
+oc --context=cluster2 label node localhost failure-domain.beta.kubernetes.io/region=minishift
+oc --context=cluster1 label node localhost failure-domain.beta.kubernetes.io/zone=east
+oc --context=cluster2 label node localhost failure-domain.beta.kubernetes.io/zone=west
+~~~
+
