@@ -36,31 +36,23 @@ A Federated Route API does not exist (as of this writing), but Federated Ingress
 does. Apply the following to the federated cluster example using `oc apply -f`
 
 ```
-apiVersion: v1
-kind: List
-items:
-- apiVersion: primitives.federation.k8s.io/v1alpha1
-  kind: FederatedIngress
-  metadata:
-    name: test-ingress
-    namespace: test-namespace
-  spec:
-    template:
-      spec:
-        rules:
-        - host: test.example.com
-          http:
-            paths:
-            - path: /
-              backend:
-                serviceName: test-service
-                servicePort: 80
-- apiVersion: primitives.federation.k8s.io/v1alpha1
-  kind: FederatedIngressPlacement
-  metadata:
-    name: test-ingress
-    namespace: test-namespace
-  spec:
+apiVersion: types.federation.k8s.io/v1alpha1
+kind: FederatedIngress
+metadata:
+  name: test-ingress
+  namespace: test-namespace
+spec:
+  template:
+    spec:
+      rules:
+      - host: test.example.com
+        http:
+          paths:
+          - path: /
+            backend:
+              serviceName: test-service
+              servicePort: 80
+  placement:
     clusterNames:
     - cluster1
     - cluster2
@@ -73,7 +65,7 @@ each member cluster:
 ```
 $ oc -n test-namespace get routes
 NAME                 HOST/PORT          PATH      SERVICES       PORT      TERMINATION   WILDCARD
-test-ingress-97dkh   test.example.com   /         test-service   80                      None
+test-ingress-89bda   test.example.com   /         test-service   80                      None
 ```
 
 To see the route in action, recall the host name used to create it, and adjust
@@ -111,33 +103,25 @@ adding the appropriate headers, and indenting the original Secret's data, kind,
 and type fields:
 
 ```
-apiVersion: v1
-kind: List
-items:
-- apiVersion: primitives.federation.k8s.io/v1alpha1
-  kind: FederatedSecret
-  metadata:
-    name: test-tls
-    namespace: test-namespace
-  spec:
-    template:
-      data:
-        tls.crt: LS0t....
-        tls.key: LS0t....
-      kind: Secret
-      type: kubernetes.io/tls
-- apiVersion: primitives.federation.k8s.io/v1alpha1
-  kind: FederatedSecretPlacement
-  metadata:
-    name: test-tls
-    namespace: test-namespace
-  spec:
+apiVersion: types.federation.k8s.io/v1alpha1
+kind: FederatedSecret
+metadata:
+  name: test-tls
+  namespace: test-namespace
+spec:
+  template:
+    data:
+      tls.crt: LS0t....
+      tls.key: LS0t....
+    kind: Secret
+    type: kubernetes.io/tls
+  placement:
     clusterNames:
     - cluster2
     - cluster1
 ```
 
-Note the FederatedSecretPlacement appended to the list in this file after the
+Note the Placement appended to the list in this file after the
 FederatedSecret template.
 
 Apply the template to federate the TLS certificate into both clusters:
@@ -175,35 +159,27 @@ tls.key:  1704 bytes
 Finally, add a tls entry to the FederatedIngress from earlier. It works to edit the original yaml file and re-apply it with `oc apply -f`.
 
 ```
-apiVersion: v1
-kind: List
-items:
-- apiVersion: primitives.federation.k8s.io/v1alpha1
-  kind: FederatedIngress
-  metadata:
-    name: test-ingress
-    namespace: test-namespace
-  spec:
-    template:
-      spec:
-        tls:
-        - hosts:
-          - test.example.com
-          secretName: test-tls
-        rules:
-        - host: test.example.com
-          http:
-            paths:
-            - path: /
-              backend:
-                serviceName: test-service
-                servicePort: 80
-- apiVersion: primitives.federation.k8s.io/v1alpha1
-  kind: FederatedIngressPlacement
-  metadata:
-    name: test-ingress
-    namespace: test-namespace
-  spec:
+apiVersion: types.federation.k8s.io/v1alpha1
+kind: FederatedIngress
+metadata:
+  name: test-ingress
+  namespace: test-namespace
+spec:
+  template:
+    spec:
+      tls:
+      - hosts:
+        - test.example.com
+        secretName: test-tls
+      rules:
+      - host: test.example.com
+        http:
+          paths:
+          - path: /
+            backend:
+              serviceName: test-service
+              servicePort: 80
+  placement:
     clusterNames:
     - cluster1
     - cluster2
@@ -218,5 +194,3 @@ Test by inspecting the routes:
 ... and using curl:
 
     curl -k -H 'Host: test.example.com' https://192.168.99.100/
-
-

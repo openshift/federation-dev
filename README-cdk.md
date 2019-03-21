@@ -20,6 +20,7 @@
     4. [Modify placement](#modify-placement)
 5. [Clean up](#clean-up)
 6. [What’s next?](#whats-next)
+7. [Known Issues](#known-issues)
 
 <!-- /TOC -->
 
@@ -74,8 +75,8 @@ The steps in this walkthrough were tested with:
 ~~~sh
 cdk version
 
-minishift v1.27.0+5981f99
-CDK v3.7.0-1
+minishift v1.31.0+d06603e
+CDK v3.8.0-2
 ~~~
 
 Initialize the CDK:
@@ -97,11 +98,11 @@ export MINISHIFT_PASSWORD
 ## Install the kubefed2 binary
 
 The `kubefed2` tool manages federated cluter registration. Download the
-0.0.2-rc.1 release and unpack it into a diretory in your PATH (the
+0.0.7 release and unpack it into a diretory in your PATH (the
 example uses `$HOME/bin`):
 
 ~~~sh
-curl -LOs https://github.com/kubernetes-sigs/federation-v2/releases/download/v0.0.4/kubefed2.tar.gz
+curl -LOs https://github.com/kubernetes-sigs/federation-v2/releases/download/v0.0.7/kubefed2.tar.gz
 tar xzf kubefed2.tar.gz -C ~/bin
 rm -f kubefed2.tar.gz
 ~~~
@@ -111,7 +112,7 @@ Verify that `kubefed2` is working:
 ~~~sh
 kubefed2 version
 
-kubefed2 version: version.Info{Version:"v0.0.4", GitCommit:"2cdf5d37240d9b8b33e2715deb75fbb7f9e003ad", GitTreeState:"clean", BuildDate:"2018-12-10T23:03:18Z", GoVersion:"go1.10.3", Compiler:"gc", Platform:"linux/amd64"}
+kubefed2 version: version.Info{Version:"v0.0.7", GitCommit:"83b778b6d92a7929efb7687d3d3d64bf0b3ad3bc", GitTreeState:"clean", BuildDate:"2019-03-19T18:40:46Z", GoVersion:"go1.11.2", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
 
 <a id="markdown-download-the-example-code" name="download-the-example-code"></a>
@@ -224,7 +225,7 @@ oc create clusterrolebinding federation-admin \
           --serviceaccount="federation-system:default"
 ~~~
 
-Change directory to Federation V2 repo (The repository submodule is already pointing to `tag/v0.0.4`):
+Change directory to Federation V2 repo (The repository submodule is already pointing to `tag/v0.0.7`):
 
 ~~~sh
 cd federation-v2/
@@ -240,6 +241,7 @@ oc create ns kube-multicluster-public
 Deploy the federation control plane and its associated Custom Resource Definitions ([CRDs](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)):
 
 ~~~sh
+sed -i "s/federation-v2:latest/federation-v2:v0.0.7/g" hack/install-latest.yaml
 oc -n federation-system apply --validate=false -f hack/install-latest.yaml
 ~~~
 
@@ -259,9 +261,9 @@ Now deploy the CRDs that determine which Kubernetes resources are federated acro
 the clusters:
 
 ~~~sh
-for filename in ./config/federatedirectives/*.yaml
+for filename in ./config/enabletypedirectives/*.yaml
 do
-  kubefed2 federate enable -f "${filename}" --federation-namespace=federation-system
+  kubefed2 enable -f "${filename}" --federation-namespace=federation-system
 done
 ~~~
 
@@ -271,7 +273,7 @@ After a short while the federation controller manager pod is running:
 oc get pod -n federation-system
 
 NAME                              READY     STATUS    RESTARTS   AGE
-federation-controller-manager-0   1/1       Running   0          31s
+federation-controller-manager-69cd6d487f-cfp2x   1/1       Running   0          31s
 ~~~
 
 <a id="markdown-register-the-clusters-in-the-cluster-registry" name="register-the-clusters-in-the-cluster-registry"></a>
@@ -319,20 +321,20 @@ Annotations:  <none>
 API Version:  core.federation.k8s.io/v1alpha1
 Kind:         FederatedCluster
 Metadata:
-  Creation Timestamp:  2018-12-20T16:40:54Z
+  Creation Timestamp:  2019-03-21T17:50:07Z
   Generation:          1
-  Resource Version:    7638
+  Resource Version:    14185
   Self Link:           /apis/core.federation.k8s.io/v1alpha1/namespaces/federation-system/federatedclusters/cluster1
-  UID:                 04bd001a-0476-11e9-aa7e-525400169746
+  UID:                 c3e2bbb9-4c01-11e9-b494-525400ac0cb8
 Spec:
   Cluster Ref:
     Name:  cluster1
   Secret Ref:
-    Name:  cluster1-7954h
+    Name:  cluster1-t6jqb
 Status:
   Conditions:
-    Last Probe Time:       2018-12-20T16:41:01Z
-    Last Transition Time:  2018-12-20T16:41:01Z
+    Last Probe Time:       2019-03-21T17:50:48Z
+    Last Transition Time:  2019-03-21T17:50:08Z
     Message:               /healthz responded with ok
     Reason:                ClusterReady
     Status:                True
@@ -347,20 +349,20 @@ Annotations:  <none>
 API Version:  core.federation.k8s.io/v1alpha1
 Kind:         FederatedCluster
 Metadata:
-  Creation Timestamp:  2018-12-20T16:40:55Z
+  Creation Timestamp:  2019-03-21T17:50:34Z
   Generation:          1
-  Resource Version:    7643
+  Resource Version:    14187
   Self Link:           /apis/core.federation.k8s.io/v1alpha1/namespaces/federation-system/federatedclusters/cluster2
-  UID:                 0579c27b-0476-11e9-aa7e-525400169746
+  UID:                 d4149c9d-4c01-11e9-b494-525400ac0cb8
 Spec:
   Cluster Ref:
     Name:  cluster2
   Secret Ref:
-    Name:  cluster2-6psnp
+    Name:  cluster2-sd64d
 Status:
   Conditions:
-    Last Probe Time:       2018-12-20T16:41:01Z
-    Last Transition Time:  2018-12-20T16:41:01Z
+    Last Probe Time:       2019-03-21T17:50:48Z
+    Last Transition Time:  2019-03-21T17:50:48Z
     Message:               /healthz responded with ok
     Reason:                ClusterReady
     Status:                True
@@ -389,15 +391,16 @@ items:
   kind: Namespace
   metadata:
     name: test-namespace
-- apiVersion: primitives.federation.k8s.io/v1alpha1
-  kind: FederatedNamespacePlacement
+- apiVersion: types.federation.k8s.io/v1alpha1
+  kind: FederatedNamespace
   metadata:
     name: test-namespace
     namespace: test-namespace
   spec:
-    clusterNames:
-    - cluster1
-    - cluster2
+    placement:
+      clusterNames:
+      - cluster1
+      - cluster2
 EOF
 ~~~
 
@@ -424,8 +427,8 @@ The sample application includes the following resources:
 
 The [sample-app directory](./sample-app) contains definitions to deploy these resources. For
 each of them there is a resource template and a placement policy, and some of
-them also have overrides. For example: the [sample nginx deployment template](./sample-app/federateddeployment-template.yaml)
-specifies 3 replicas, but there is also [an override](./sample-app/federateddeployment-override.yaml) that sets the replicas to 5
+them also have overrides. For example: the [sample nginx deployment template](./sample-app/federateddeployment.yaml)
+specifies 3 replicas, but there is also an override that sets the replicas to 5
 on `cluster2`.
 
 Instantiate all these federated resources:
@@ -466,8 +469,8 @@ Now modify the test namespace placement policy to remove `cluster2`, leaving it
 only active on `cluster1`:
 
 ~~~sh
-oc -n test-namespace patch federatednamespaceplacement test-namespace \
-    --type=merge -p '{"spec":{"clusterNames": ["cluster1"]}}'
+oc -n test-namespace patch federatednamespace test-namespace \
+    --type=merge -p '{"spec":{"placement":{"clusterNames": ["cluster1"]}}}'
 ~~~
 
 Observe how the federated resources are now only present in `cluster1`:
@@ -484,8 +487,8 @@ done
 Now add `cluster2` back to the federated namespace placement:
 
 ~~~sh
-oc -n test-namespace patch federatednamespaceplacement test-namespace \
-    --type=merge -p '{"spec":{"clusterNames": ["cluster1", "cluster2"]}}'
+oc -n test-namespace patch federatednamespace test-namespace \
+    --type=merge -p '{"spec":{"placement":{"clusterNames": ["cluster1", "cluster2"]}}}'
 ~~~
 
 And verify that the federated resources were deployed on both clusters again:
@@ -534,3 +537,22 @@ testing, but it has limitations. More advanced aspects of cluster federation
 like managing ingress traffic or storage rely on supporting infrastructure for
 the clusters that is not available in minishift. These will be topics for
 more advanced guides.
+
+<a id="markdown-known-issues" name="known-issues"></a>
+# Known Issues
+
+One issue that has come up while working with this demo is a log entry generated once per minute per cluster over the lack of zone or region labels on the minishift nodes. The error is harmless, but may interfere with finding real issues in the federation-controller-manager logs. An example follows:
+
+~~~
+W0321 15:51:31.208448       1 controller.go:216] Failed to get zones and region for cluster cluster1: Zone name for node localhost not found. No label with key failure-domain.beta.kubernetes.io/zone
+W0321 15:51:31.298093       1 controller.go:216] Failed to get zones and region for cluster cluster2: Zone name for node localhost not found. No label with key failure-domain.beta.kubernetes.io/zone
+~~~
+
+The work-around would be to go ahead and label the minishift nodes with some zone and region data, e.g.
+
+~~~sh
+oc --context=cluster1 label node localhost failure-domain.beta.kubernetes.io/region=minishift
+oc --context=cluster2 label node localhost failure-domain.beta.kubernetes.io/region=minishift
+oc --context=cluster1 label node localhost failure-domain.beta.kubernetes.io/zone=east
+oc --context=cluster2 label node localhost failure-domain.beta.kubernetes.io/zone=west
+~~~
