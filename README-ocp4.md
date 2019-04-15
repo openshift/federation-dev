@@ -152,7 +152,7 @@ federation-controller-manager-744f57ccff-q4f6k   1/1       Running   0          
 Now we are going to enable some of the federated types needed for our demo application
 
 ~~~sh
-for type in namespaces secrets serviceaccounts services configmaps deployments.extensions
+for type in namespaces secrets serviceaccounts services configmaps deployments.apps
 do
     kubefed2 enable $type --federation-namespace test-namespace --registry-namespace test-namespace
 done
