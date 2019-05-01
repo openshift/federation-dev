@@ -9,11 +9,13 @@ Kubernetes Federation is a tool to sync (aka "federate") a set of Kubernetes obj
 ``
 
 ### Namespace Scoped labs
-Namespace scoped Federation initially be the only supported mechanism for federating
+Namespace scoped Federation will initially be the only supported mechanism for federating
 multiple OpenShift/Kubernetes environments. Namespace scoped Federation uses OperatorHub
 which is included within OpenShift to install the Federation Operator.
 Using [OpenShift Container Plaform 4](./README-ocp4.md)
 
 ### Cluster Scoped labs
+Cluster scoped Federation using an Operator is still in progress. The examples below
+will run through the procedures of manually configuring cluster scoped Federation.
 Using [minishift](./README-minishift.md)<br/>
 Using [cdk](./README-minishift.md)
