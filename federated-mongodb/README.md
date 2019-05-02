@@ -1,6 +1,6 @@
 # Federated MongoDB
 The files within this directory are used with the Federation V2 operator to show
-an application balancing and moving between OpenShift clusters. An accompanying video
+MongoDB running on multiple OpenShift clusters. An accompanying video
 is here. This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
 clusters have already been deployed using of the deployment mechanisms defined at
 https://cloud.openshift.com.
@@ -9,11 +9,11 @@ https://cloud.openshift.com.
 The first step is to decide which of the clusters will run the Federation Operator.
 Only one cluster runs the federation-controller-manager.
 
-A new project of *pacman* is created within the OpenShift UI. Once the project
+A new project of *federated-mongo* is created within the OpenShift UI. Once the project
 is created the Operator should be deployed.
 
 Select OperatorHub</br>
-![OperatorHub](../images/operatorhub.png)
+![OperatorHub](../images/mongooperator.png)
 
 
 Once the OperatorHub loads click Federation </br>
@@ -26,7 +26,7 @@ which version of Kubefed2 to use.
 Select Install</br>
 ![Install Federation](../images/install.png)
 
-Subscribe to the Federation Operator in the *pacman* namespace by clicking the
+Subscribe to the Federation Operator in the *federated-mongo* namespace by clicking the
 *Subscribe* button.
 ![Subscribe Federation](../images/subsribe.png)
 
@@ -80,19 +80,19 @@ export KUBECONFIG=`pwd`/aws-east1-east2-west2
 
 Now that there is a working `kubeconfig` the next step is to federate the clusters using `kubefed2`.
 ~~~sh
-kubefed2 join east1 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=pacman --registry-namespace=pacman --limited-scope=true
-kubefed2 join east2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=pacman --registry-namespace=pacman --limited-scope=true
-kubefed2 join west2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=pacman --registry-namespace=pacman --limited-scope=true
+kubefed2 join east1 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo --registry-namespace=federated-mongo --limited-scope=true
+kubefed2 join east2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo --registry-namespace=federated-mongo --limited-scope=true
+kubefed2 join west2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo --registry-namespace=federated-mongo --limited-scope=true
 
 for type in namespaces clusterroles.rbac.authorization.k8s.io deployments.apps ingresses.extensions jobs replicasets.apps secrets serviceaccounts services configmaps clusterrolebindings.rbac.authorization.k8s.io
 do
-  kubefed2 enable $type --federation-namespace pacman --registry-namespace pacman
+  kubefed2 enable $type --federation-namespace federated-mongo --registry-namespace federated-mongo
 done
 ~~~
 
 Validate that the clusters are defined as `federatedclusters`.
 ~~~sh
-oc get federatedclusters -n pacman
+oc get federatedclusters -n federated-mongo
 NAME    READY
 east1   True
 east2   True

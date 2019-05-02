@@ -30,7 +30,7 @@ federation controller.
 <a id="markdown-pre-requisites" name="pre-requisites"></a>
 # Prerequisites
 
-The Federation Operator requires atleast one [OpenShift Container Platform](https://www.openshift.com/) 4.0 cluster.
+The Federation Operator requires at least one [OpenShift Container Platform](https://www.openshift.com/) 4.0 cluster.
 
 This walkthrough will use 2 OCP 4.0 clusters deployed using the [developer preview on AWS](https://cloud.openshift.com/clusters/install).
 
@@ -158,7 +158,7 @@ do
 done
 ~~~
 
-**Warning**: 
+**Warning**:
 
 If you get this error while enabling new types, you are hitting this [bug](https://bugzilla.redhat.com/show_bug.cgi?id=1692869) (will be fixed in 0.0.8 release):
 
