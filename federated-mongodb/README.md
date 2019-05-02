@@ -9,8 +9,7 @@ https://cloud.openshift.com.
 The first step is to decide which of the clusters will run the Federation Operator.
 Only one cluster runs the federation-controller-manager.
 
-A new project of *federated-mongo* is created within the OpenShift UI. Once the project
-is created the Operator should be deployed.
+A new project of *federated-mongo* is created within the OpenShift UI on cluster east1. Once the project is created the next step is to deploy the operator.
 
 Select OperatorHub</br>
 ![OperatorHub](../images/mongooperator.png)
@@ -45,7 +44,7 @@ The `kubefed2` tool manages federated cluster registration. Download the
 v0.0.8 release and unpack it into a directory in your PATH (the
 example uses `$HOME/bin`):
 
-NOTE: This version may change as the operator matures. Verify that the version of
+NOTE: The version may change as the operator matures. Verify that the version of
 Federation matches the version of `kubefed2`.
 
 ~~~sh
@@ -67,7 +66,7 @@ Now that the `kubefed2` binary has been acquired the next step is joining the cl
 below will change the context name and then create a joint `kubeconfig` file.
 
 NOTE: By default the context is defined as *admin* in the `kubeconfig` file for OpenShift
-4 clusters.  The directories below east-1, east-2, and east-3 represent the directories
+4 clusters.  The directories below east-1, east-2, and west-2 represent the directories
 containing the `kubconfig` related to those OpenShift deployments. Your cluster names may be different.
 ~~~sh
 sed -i 's/admin/east1/g' east-1/auth/kubeconfig
@@ -115,7 +114,7 @@ mv cfssljson_linux-amd64 ~/bin/cfssljson
 chmod +x ~/bin/cfssljson
 ~~~
 
-Create the following files to be used for certificate signing
+Create the following files to be used for certificate signing. The `ca-csr.json` and `mongodb-csr.json` should reflect values that may be relevant to the organization or OpenShift clusters.
 **ca-config.json**
 ```json
 {
@@ -170,8 +169,7 @@ Create the following files to be used for certificate signing
   ]
 }
 ```
-Before beginning the routes must be defined. These routes will be used as the endpoints
-for MongoDB and be populated as OpenShift routes.
+The routes used for the MongoDB endpoints must be defined as certificates will be generated against them. The following  routes will be used as the endpoints for MongoDB and be populated within OpenShift as routes.
 
 ~~~sh
 SERVICE_NAME=mongo
@@ -194,7 +192,6 @@ the [user guide](https://github.com/kubernetes-sigs/federation-v2/blob/master/do
 
 
 The first step is to clone the demo code to your local machine:
-
 ~~~sh
 git clone https://github.com/openshift/federation-dev.git
 cd federation-dev/federated-mongodb

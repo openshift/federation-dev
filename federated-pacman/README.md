@@ -9,8 +9,8 @@ https://cloud.openshift.com.
 The first step is to decide which of the clusters will run the Federation Operator.
 Only one cluster runs the federation-controller-manager.
 
-A new project of *pacman* is created within the OpenShift UI. Once the project
-is created the Operator should be deployed.
+A new project of *pacman* is created within the OpenShift UI on cluster east1. Once the project
+is created the next step is to deploy the operator.
 
 Select OperatorHub</br>
 ![OperatorHub](../images/operatorhub.png)
@@ -45,7 +45,7 @@ The `kubefed2` tool manages federated cluster registration. Download the
 v0.0.8 release and unpack it into a directory in your PATH (the
 example uses `$HOME/bin`):
 
-NOTE: This version may change as the operator matures. Verify that the version of
+NOTE: The version may change as the operator matures. Verify that the version of
 Federation matches the version of `kubefed2`.
 
 ~~~sh
@@ -67,7 +67,7 @@ Now that the `kubefed2` binary has been acquired the next step is joining the cl
 below will change the context name and then create a joint `kubeconfig` file.
 
 NOTE: By default the context is defined as *admin* in the `kubeconfig` file for OpenShift
-4 clusters.  The directories below east-1, east-2, and east-3 represent the directories
+4 clusters.  The directories below east-1, east-2, and west-2 represent the directories
 containing the `kubconfig` related to those OpenShift deployments. Your cluster names may be different.
 ~~~sh
 sed -i 's/admin/east1/g' east-1/auth/kubeconfig
@@ -106,7 +106,7 @@ non-federated objects. For more information about federated objects see the foll
 the [user guide](https://github.com/kubernetes-sigs/federation-v2/blob/master/docs/userguide.md).
 
 For the *pacman* application, the first step is to modify the `pacman-federated-deployment-rs.yaml` file to reflect
-a MongoDB endpoint. The MongoDB endpoint is used to save scores from the game.
+the MongoDB endpoint. The MongoDB endpoint is used to save scores from the game.
 
 Clone the demo code to your local machine:
 ~~~sh
@@ -164,7 +164,9 @@ oc create configmap haproxy --from-file=01-haproxy
 A load balancer `service` is used to create a cloud provider load balancer. The Load balancer provides a publicly
 available endpoint that can be used to assign a DNS A record.
 ~~~sh
+# Create the HAProxy service
 oc -n pacman create -f 02-haproxy-service.yaml
+# Create the HAProxy deployment
 oc -n pacman create -f 03-haproxy-deployment.yaml
 ~~~
 
@@ -177,7 +179,7 @@ NAME         TYPE           CLUSTER-IP       EXTERNAL-IP                        
 haproxy-lb   LoadBalancer   172.31.161.224   ae294119d6d0d11e9b8b10e1ce99fb1b-1020848795.us-east-1.elb.amazonaws.com   80:31587/TCP   86m
 ~~~
 
-Provide the load balancer external IP to a the DNS zone to allow for routing.
+The next step is to provide the load balancer `EXTERNAL-IP` to a the DNS zone to allow for routing.
 
 NOTE: The A record will point to the publicly accessible address for the *pacman* application.
 
@@ -191,7 +193,7 @@ save the high score at the end of the game. This shows the data being persisted 
 the database.
 
 ## Moving the Application
-By patching the `federateddeployment` the application can be scheduled and unscheduled between the clusters. Below we will remove the *pacman* application from all clusters except for east2. This is done by modifying the `federateddeployment`
+By patching the `federateddeployment` the application can be scheduled and unscheduled between the clusters. The step below remove the *pacman* application from all clusters except for east2. This is done by modifying the `federateddeployment`
 ~~~sh
 oc --context=east1 -n pacman patch federateddeployment pacman --type=merge -p '{"spec":{"overrides":[{"clusterName":"west2","clusterOverrides":[{"path":"spec.replicas","value":0}]},{"clusterName":"east1","clusterOverrides":[{"path":"spec.replicas","value":0}]}]}}'
 ~~~
