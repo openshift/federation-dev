@@ -49,11 +49,6 @@ export KUBECONFIG=`pwd`/aws-east1-east2-west2
 oc config set-context east1
 ~~~
 
-~~~sh
-$ oc get csv
-NAME                DISPLAY      VERSION   REPLACES   PHASE
-federation.v0.0.8   Federation   0.0.8                Succeeded
-~~~
 ## Install the kubefed2 binary
 
 The `kubefed2` tool manages federated cluster registration. Download the
@@ -210,8 +205,8 @@ Before deploying MongoDB the yaml files need to be updated to define the certifi
 were created as well as the routing endpoints that will be used. Ensure the values of `/tmp/mongo.pem` and `/tmp/ca.pem` reflect the path where the `pem` files were created.
 ~~~sh
 # Define the pem
-sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < /tmp/mongo.pem)/" 01-mongo-federated-secret.yaml
-sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < /tmp/ca.pem)/" 01-mongo-federated-secret.yaml
+sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < ../../mongo.pem)/" 01-mongo-federated-secret.yaml
+sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < ../../ca.pem)/" 01-mongo-federated-secret.yaml
 # Configure MongoDB Endpoints for the deployment
 sed -i "s/primarynodehere/${ROUTE_CLUSTER1}:443/" 04-mongo-federated-deployment-rs.yaml
 sed -i "s/replicamembershere/${ROUTE_CLUSTER1}:443,${ROUTE_CLUSTER2}:443,${ROUTE_CLUSTER3}:443/" 04-mongo-federated-deployment-rs.yaml
@@ -243,19 +238,19 @@ oc --context=west2 -n federated-mongo create route passthrough mongo --service=m
 Verify that the pods are running and label the MongoDB primary pod.
 ~~~sh
 # Wait until east1 mongodb deployment is ready
-oc --context=east1 -n ${NAMESPACE} get deployment mongo
+oc --context=east1 -n federated-mongo get deployment mongo
 # Wait until east2 mongodb deployment is ready
-oc --context=east2 -n ${NAMESPACE} get deployment mongo
+oc --context=east2 -n federated-mongo get deployment mongo
 # Wait until west2 mongodb deployment is ready
-oc --context=west2 -n ${NAMESPACE} get deployment mongo
+oc --context=west2 -n federated-mongo get deployment mongo
 # Select Primary MongoDB pod
-MONGO_POD=$(oc --context=east1 -n ${NAMESPACE} get pod --selector="name=mongo" --output=jsonpath='{.items..metadata.name}')
+MONGO_POD=$(oc --context=east1 -n federated-mongo get pod --selector="name=mongo" --output=jsonpath='{.items..metadata.name}')
 # Label primary pod
-oc --context=east1 -n ${NAMESPACE} label pod $MONGO_POD replicaset=primary
+oc --context=east1 -n federated-mongo label pod $MONGO_POD replicaset=primary
 # Wait 30 seconds so the replicaset is configured
 sleep 30
 # Get replicaset status
-oc --context=east1 -n ${NAMESPACE} exec $MONGO_POD -- bash -c 'mongo --norc --quiet --username=admin --password=$MONGODB_ADMIN_PASSWORD --host localhost admin --tls --tlsCAFile /opt/mongo-ssl/ca.pem --eval "rs.status()"'
+oc --context=east1 -n federated-mongo exec $MONGO_POD -- bash -c 'mongo --norc --quiet --username=admin --password=$MONGODB_ADMIN_PASSWORD --host localhost admin --tls --tlsCAFile /opt/mongo-ssl/ca.pem --eval "rs.status()"'
 ~~~
 
 Using the output above it is possible to identify the primary and secondary MongoDB
