@@ -34,11 +34,22 @@ Back at the command line run the following command looking for the status of Suc
 
 NOTE: This may take a few minutes
 
+## Kubeconfig
+Specific items are required to be configured within the `kubeconfig` file before
+federating clusters. By default the context is defined as *admin* in the `kubeconfig` file for OpenShift
+4 clusters.  The directories below east-1, east-2, and west-2 represent the directories
+containing independent OpenShift 4 clusters and the `kubconfig` relating to those OpenShift deployments.
+Your cluster names may be different.
 ~~~sh
-$ oc get csv
-NAME                DISPLAY      VERSION   REPLACES   PHASE
-federation.v0.0.8   Federation   0.0.8                Succeeded
+sed -i 's/admin/east1/g' east-1/auth/kubeconfig
+sed -i 's/admin/east2/g' east-2/auth/kubeconfig
+sed -i 's/admin/west2/g' west-2/auth/kubeconfig
+export KUBECONIFG=`pwd`/east-1/auth/kubeconfig:`pwd`/east-2/auth/kubeconfig:`pwd`/west-2/auth/kubeconfig
+oc config view --flatten > aws-east1-east2-west2
+export KUBECONFIG=`pwd`/aws-east1-east2-west2
+oc config set-context east1
 ~~~
+
 ## Install the `kubefed2` binary
 
 The `kubefed2` tool manages federated cluster registration. Download the
@@ -50,8 +61,8 @@ Federation matches the version of `kubefed2`.
 
 ~~~sh
 curl -LOs https://github.com/kubernetes-sigs/federation-v2/releases/download/v0.0.8/kubefed2.tgz
-tar xzf kubefed2.tar.gz -C ~/bin
-rm -f kubefed2.tar.gz
+tar xzf kubefed2.tgz -C ~/bin
+rm -f kubefed2.tgz
 ~~~
 
 Verify that `kubefed2` is working:
@@ -63,22 +74,15 @@ kubefed2 version: version.Info{Version:"v0.0.8", GitCommit:"0d12bc3d438b61d9966c
 
 ## Joining Clusters
 Now that the `kubefed2` binary has been acquired the next step is joining the clusters.
-`kubefed2` binary utilizes the contexts and clusters within `kubeconfig` when defining the clusters. Before beginning it is important to setup the `kubeconfig` variable. The steps
-below will change the context name and then create a joint `kubeconfig` file.
+`kubefed2` binary utilizes the contexts and clusters within `kubeconfig` when defining the clusters.
 
-NOTE: By default the context is defined as *admin* in the `kubeconfig` file for OpenShift
-4 clusters.  The directories below east-1, east-2, and west-2 represent the directories
-containing the `kubconfig` related to those OpenShift deployments. Your cluster names may be different.
+Using the `kubeconfig` file that was generated, verify the Operator has been successfully deployed.
 ~~~sh
-sed -i 's/admin/east1/g' east-1/auth/kubeconfig
-sed -i 's/admin/east2/g' east-2/auth/kubeconfig
-sed -i 's/admin/west2/g' west-2/auth/kubeconfig
-export KUBECONIFG=`pwd`/east-1/auth/kubeconfig:`pwd`/east-2/auth/kubeconfig:`pwd`/west-2/auth/kubeconfig
-oc config view --flatten > aws-east1-east2-west2
-export KUBECONFIG=`pwd`/aws-east1-east2-west2
+$ oc get csv -n pacman
+NAME                DISPLAY      VERSION   REPLACES   PHASE
+federation.v0.0.8   Federation   0.0.8                Succeeded
 ~~~
-
-Now that there is a working `kubeconfig` the next step is to federate the clusters using `kubefed2`.
+The next step is to federate the clusters using `kubefed2`.
 ~~~sh
 kubefed2 join east1 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=pacman --registry-namespace=pacman --limited-scope=true
 kubefed2 join east2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=pacman --registry-namespace=pacman --limited-scope=true
