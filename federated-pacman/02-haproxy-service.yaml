@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: haproxy
+  name: haproxy-lb
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    deploymentconfig: haproxy
+  sessionAffinity: None
+  type: LoadBalancer
+
