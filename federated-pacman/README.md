@@ -73,7 +73,7 @@ containing the `kubconfig` related to those OpenShift deployments. Your cluster 
 sed -i 's/admin/east1/g' east-1/auth/kubeconfig
 sed -i 's/admin/east2/g' east-2/auth/kubeconfig
 sed -i 's/admin/west2/g' west-2/auth/kubeconfig
-export KUBECONIFG=`pwd/east-1/auth/kubeconfig`:`pwd`/east-2/auth/kubeconfig:`pwd`/west-2/auth/kubeconfig
+export KUBECONIFG=`pwd`/east-1/auth/kubeconfig`:`pwd`/east-2/auth/kubeconfig:`pwd`/west-2/auth/kubeconfig
 oc config view --flatten > aws-east1-east2-west2
 export KUBECONFIG=`pwd`/aws-east1-east2-west2
 ~~~
