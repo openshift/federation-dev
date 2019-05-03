@@ -52,9 +52,9 @@ spec:
             - name: MONGODB_REPLICA_NAME
               value: "rs0"
             - name: PRIMARY_NODE
-              value: "mongo-east1.apps.east-1.example1.com:443"
+              value: "primarynodehere"
             - name: REPLICA_MEMBERS
-              value: "mongo-east1.apps.east-1.example1.com:443,mongo-east2.apps.east-2.example1.com:443,mongo-west2.apps.west-2.example1.com:443"
+              value: "replicamembershere"
             ports:
             - name: mongo
               containerPort: 27017
