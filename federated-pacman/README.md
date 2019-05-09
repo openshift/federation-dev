@@ -1,7 +1,7 @@
 # Federation Pacman
 The files within this directory are used with the Federation V2 operator to show
 an application balancing and moving between OpenShift clusters. An accompanying video
-is here. This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
+is [here](https://youtu.be/avCPAJms3Fc). This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
 clusters have already been deployed using of the deployment mechanisms defined at
 https://cloud.openshift.com.
 
