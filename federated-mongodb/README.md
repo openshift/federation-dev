@@ -1,5 +1,5 @@
 # Federated MongoDB
-The files within this directory are used with the Federation V2 operator to show
+The files within this directory are used with the Federation operator to show
 MongoDB running on multiple OpenShift clusters. An accompanying video
 is [here](https://youtu.be/StNJupmZ5Mo). This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
 clusters have already been deployed using of the deployment mechanisms defined at
@@ -20,7 +20,7 @@ Once the OperatorHub loads click Federation </br>
 
 Once Federation has been chosen, information about the Operator will appear. It is
 important to take note of the Operator Version as this will be needed when deciding
-which version of Kubefed2 to use.
+which version of Kubefedctl to use.
 
 Select Install</br>
 ![Install Federation](../images/install.png)
@@ -49,47 +49,47 @@ export KUBECONFIG=`pwd`/aws-east1-east2-west2
 oc config set-context east1
 ~~~
 
-## Install the kubefed2 binary
+## Install the kubefedctl binary
 
-The `kubefed2` tool manages federated cluster registration. Download the
-v0.0.8 release and unpack it into a directory in your PATH (the
+The `kubefedctl` tool manages federated cluster registration. Download the
+v0.0.10 release and unpack it into a directory in your PATH (the
 example uses `$HOME/bin`):
 
 NOTE: The version may change as the operator matures. Verify that the version of
-Federation matches the version of `kubefed2`.
+Federation matches the version of `kubefedctl`.
 
 ~~~sh
-curl -LOs https://github.com/kubernetes-sigs/federation-v2/releases/download/v0.0.8/kubefed2.tgz
-tar xzf kubefed2.tgz -C ~/bin
-rm -f kubefed2.tgz
+curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.0.10/kubefedctl.tgz
+tar xzf kubefedctl.tgz -C ~/bin
+rm -f kubefedctl.tgz
 ~~~
 
-Verify that `kubefed2` is working:
+Verify that `kubefedctl` is working:
 ~~~sh
-kubefed2 version
+kubefedctl version
 
-kubefed2 version: version.Info{Version:"v0.0.8", GitCommit:"0d12bc3d438b61d9966c79a19f12b01d00d95aae", GitTreeState:"clean", BuildDate:"2019-04-11T04:26:34Z", GoVersion:"go1.11.2", Compiler:"gc", Platform:"linux/amd64"}
+kubefedctl version: version.Info{Version:"v0.0.10-dirty", GitCommit:"71d233ede685707df554ef653e06bf7f0229415c", GitTreeState:"dirty", BuildDate:"2019-05-06T22:30:31Z", GoVersion:"go1.11.2", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
 
 ## Joining Clusters
-Now that the `kubefed2` binary has been acquired the next step is joining the clusters.
-`kubefed2` binary utilizes the contexts and clusters within `kubeconfig` when defining the clusters.
+Now that the `kubefedctl` binary has been acquired the next step is joining the clusters.
+`kubefedctl` binary utilizes the contexts and clusters within `kubeconfig` when defining the clusters.
 
 Using the `kubeconfig` file that was generated, verify the Operator has been successfully deployed.
 ~~~sh
 $ oc get csv -n federated-mongo
 NAME                DISPLAY      VERSION   REPLACES   PHASE
-federation.v0.0.8   Federation   0.0.8                Succeeded
+federation.v0.0.10   Federation   0.0.10                Succeeded
 ~~~
-The next step is to federate the clusters using `kubefed2`.
+The next step is to federate the clusters using `kubefedctl`.
 ~~~sh
-kubefed2 join east1 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo --registry-namespace=federated-mongo --limited-scope=true
-kubefed2 join east2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo --registry-namespace=federated-mongo --limited-scope=true
-kubefed2 join west2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo --registry-namespace=federated-mongo --limited-scope=true
+kubefedctl join east1 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
+kubefedctl join east2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
+kubefedctl join west2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
 
-for type in namespaces clusterroles.rbac.authorization.k8s.io deployments.apps ingresses.extensions jobs replicasets.apps secrets serviceaccounts services persistentvolumeclaims configmaps clusterrolebindings.rbac.authorization.k8s.io
+for type in namespaces deployments.apps ingresses.extensions secrets serviceaccounts services persistentvolumeclaims configmaps
 do
-  kubefed2 enable $type --federation-namespace federated-mongo --registry-namespace federated-mongo
+  kubefedctl enable $type --federation-namespace federated-mongo
 done
 ~~~
 
@@ -191,8 +191,8 @@ cat mongodb-key.pem mongodb.pem > mongo.pem
 
 ## Deploying MongoDB
 There are many different types of federated objects but they are somewhat similar to those
-non-federated objects. For more information about federated objects see the following  [examples](https://github.com/kubernetes-sigs/federation-v2/tree/master/example/sample1) and
-the [user guide](https://github.com/kubernetes-sigs/federation-v2/blob/master/docs/userguide.md).
+non-federated objects. For more information about federated objects see the following  [examples](https://github.com/kubernetes-sigs/kubefed/tree/master/example/sample1) and
+the [user guide](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/userguide.md).
 
 
 The first step is to clone the demo code to your local machine:
