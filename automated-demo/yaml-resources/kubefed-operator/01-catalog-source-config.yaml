@@ -1,0 +1,8 @@
+apiVersion: operators.coreos.com/v1
+kind: CatalogSourceConfig
+metadata:
+  name: installed-federation-changemeNS
+  namespace: openshift-marketplace
+spec:
+  targetNamespace: changemeNS
+  packages: federation
