@@ -1,0 +1,19 @@
+apiVersion: types.federation.k8s.io/v1alpha1
+kind: FederatedPersistentVolumeClaim
+metadata:
+  name: mongo
+  labels:
+    name: mongo
+spec:
+  template:
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+  placement:
+    clusterNames:
+    - feddemocl1
+    - feddemocl2
+    - feddemocl3

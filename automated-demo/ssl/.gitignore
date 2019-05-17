@@ -1,0 +1,7 @@
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+!ca-config.json
+!ca-csr.json
+!mongodb-csr.json
