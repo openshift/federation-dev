@@ -84,7 +84,8 @@ context_creation()
 {
   CONTEXT_NAME=$1
   API_URL=$2
-  ADMIN_PWD=$3
+  ADMIN_USER=$3
+  ADMIN_PWD=$4
   echo "Deleting and re-creating context ${CONTEXT_NAME}"
   oc config delete-context ${CONTEXT_NAME} &> /dev/null
   oc login ${API_URL} --username=${ADMIN_USER} --password=${ADMIN_PWD} --insecure-skip-tls-verify=true &> /dev/null
@@ -103,24 +104,41 @@ get_data_from_user()
   echo "  OCP Admin User: kubeadmin"
   echo "  Cluster1 Admin password: kN7Ts-V3Ry-S3cur3-8SfD8"
   echo "--------------------"
-  read -rp "Cluster1 URL: " CLUSTER1_URL 
-  read -rp "Cluster2 URL: " CLUSTER2_URL 
+  read -rp "Cluster1 URL: " CLUSTER1_URL
+  read -rp "Cluster1 OCP Version [3|4]: " CLUSTER1_VERSION
+  read -rp "Cluster2 URL: " CLUSTER2_URL
+  read -rp "Cluster2 OCP Version [3|4]: " CLUSTER2_VERSION
   read -rp "Cluster3 URL: " CLUSTER3_URL 
+  read -rp "Cluster3 OCP Version [3|4]: " CLUSTER3_VERSION
   read -rp "Pacman LB URL: " PACMAN_URL
   read -rp "OCP Admin User: " ADMIN_USER
+  read -rp "Cluster1 Admin: " CLUSTER1_ADMIN_PWD
   read -rp "Cluster1 Admin Password: " CLUSTER1_ADMIN_PWD
+  read -rp "Cluster2 Admin: " CLUSTER2_ADMIN
   read -rp "Cluster2 Admin Password: " CLUSTER2_ADMIN_PWD
+  read -rp "Cluster3 Admin: " CLUSTER3_ADMIN
   read -rp "Cluster3 Admin Password: " CLUSTER3_ADMIN_PWD
   CLUSTER1_API_URL="https://api.${CLUSTER1_URL}:6443"
   CLUSTER2_API_URL="https://api.${CLUSTER2_URL}:6443"
   CLUSTER3_API_URL="https://api.${CLUSTER3_URL}:6443"
+  if [ "0$CLUSTER1_VERSION" == "03" ]
+  then
+    CLUSTER1_API_URL="https://console.${CLUSTER1_URL}:8443"
+  fi
+  if [ "0$CLUSTER2_VERSION" == "03" ]
+  then
+    CLUSTER2_API_URL="https://console.${CLUSTER2_URL}:8443"
+  fi
+  if [ "0$CLUSTER3_VERSION" == "03" ]
+  then
+    CLUSTER3_API_URL="https://console.${CLUSTER3_URL}:8443"
+  fi
   echo "--------------------"
   echo "Input data"
-  echo "Cluster 1 Domain: ${CLUSTER1_URL} - API: ${CLUSTER1_API_URL}"
-  echo "Cluster 2 Domain: ${CLUSTER2_URL} - API: ${CLUSTER2_API_URL}"
-  echo "Cluster 3 Domain: ${CLUSTER3_URL} - API: ${CLUSTER3_API_URL}"
+  echo "Cluster 1 Domain: ${CLUSTER1_URL} - API: ${CLUSTER1_API_URL} - Admin User: ${CLUSTER1_ADMIN}"
+  echo "Cluster 2 Domain: ${CLUSTER2_URL} - API: ${CLUSTER2_API_URL} - Admin User: ${CLUSTER2_ADMIN}"
+  echo "Cluster 3 Domain: ${CLUSTER3_URL} - API: ${CLUSTER3_API_URL} - Admin User: ${CLUSTER3_ADMIN}"
   echo "Pacman LB URL: ${PACMAN_URL}"
-  echo "OCP Admin User: ${ADMIN_USER}"
 }
 
 get_data_from_inventory()
@@ -128,22 +146,39 @@ get_data_from_inventory()
   INVENTORY=$1
   download_jq_binary
   CLUSTER1_URL=$(./bin/jq -r '.cluster1.url' $INVENTORY)
+  CLUSTER1_VERSION=$(./bin/jq -r '.cluster1.ocp_version' $INVENTORY)
   CLUSTER2_URL=$(./bin/jq -r '.cluster2.url' $INVENTORY)
+  CLUSTER2_VERSION=$(./bin/jq -r '.cluster2.ocp_version' $INVENTORY)
   CLUSTER3_URL=$(./bin/jq -r '.cluster3.url' $INVENTORY)
+  CLUSTER3_VERSION=$(./bin/jq -r '.cluster3.ocp_version' $INVENTORY)
   CLUSTER1_API_URL="https://api.${CLUSTER1_URL}:6443"
   CLUSTER2_API_URL="https://api.${CLUSTER2_URL}:6443"
   CLUSTER3_API_URL="https://api.${CLUSTER3_URL}:6443"
+  if [ "0$CLUSTER1_VERSION" == "03" ]
+  then
+    CLUSTER1_API_URL="https://console.${CLUSTER1_URL}:8443"
+  fi
+  if [ "0$CLUSTER2_VERSION" == "03" ]
+  then
+    CLUSTER2_API_URL="https://console.${CLUSTER2_URL}:8443"
+  fi
+  if [ "0$CLUSTER3_VERSION" == "03" ]
+  then
+    CLUSTER3_API_URL="https://console.${CLUSTER3_URL}:8443"
+  fi
   PACMAN_URL=$(./bin/jq -r '.pacman_lb_url' $INVENTORY)
   ADMIN_USER=$(./bin/jq -r '.admin_user' $INVENTORY)
+  CLUSTER1_ADMIN=$(./bin/jq -r '.cluster1.admin_user' $INVENTORY)
   CLUSTER1_ADMIN_PWD=$(./bin/jq -r '.cluster1.admin_password' $INVENTORY)
+  CLUSTER2_ADMIN=$(./bin/jq -r '.cluster2.admin_user' $INVENTORY)
   CLUSTER2_ADMIN_PWD=$(./bin/jq -r '.cluster2.admin_password' $INVENTORY)
+  CLUSTER3_ADMIN=$(./bin/jq -r '.cluster3.admin_user' $INVENTORY)
   CLUSTER3_ADMIN_PWD=$(./bin/jq -r '.cluster3.admin_password' $INVENTORY)
   echo "Data gathered from inventory: $INVENTORY" 
-  echo "Cluster 1 Domain: ${CLUSTER1_URL} - API: ${CLUSTER1_API_URL}"
-  echo "Cluster 2 Domain: ${CLUSTER2_URL} - API: ${CLUSTER2_API_URL}"
-  echo "Cluster 3 Domain: ${CLUSTER3_URL} - API: ${CLUSTER3_API_URL}"
+  echo "Cluster 1 Domain: ${CLUSTER1_URL} - API: ${CLUSTER1_API_URL} - Admin User: ${CLUSTER1_ADMIN}"
+  echo "Cluster 2 Domain: ${CLUSTER2_URL} - API: ${CLUSTER2_API_URL} - Admin User: ${CLUSTER2_ADMIN}"
+  echo "Cluster 3 Domain: ${CLUSTER3_URL} - API: ${CLUSTER3_API_URL} - Admin User: ${CLUSTER3_ADMIN}"
   echo "Pacman URL: $PACMAN_URL"
-  echo "Admin User: $ADMIN_USER"
 }
 
 get_input_data()
@@ -742,9 +777,9 @@ main()
     if [ $RUN_CONTEXT_CREATION -eq 1 ]
     then
       echo "We are going to create three contexts into our oc tool config"
-      context_creation "feddemocl1" ${CLUSTER1_API_URL} ${CLUSTER1_ADMIN_PWD} 
-      context_creation "feddemocl2" ${CLUSTER2_API_URL} ${CLUSTER2_ADMIN_PWD} 
-      context_creation "feddemocl3" ${CLUSTER3_API_URL} ${CLUSTER3_ADMIN_PWD} 
+      context_creation "feddemocl1" ${CLUSTER1_API_URL} ${CLUSTER1_ADMIN} ${CLUSTER1_ADMIN_PWD} 
+      context_creation "feddemocl2" ${CLUSTER2_API_URL} ${CLUSTER2_ADMIN} ${CLUSTER2_ADMIN_PWD} 
+      context_creation "feddemocl3" ${CLUSTER3_API_URL} ${CLUSTER3_ADMIN} ${CLUSTER3_ADMIN_PWD} 
     fi
     if [ $RUN_SETUP_KUBEFED -eq 1 ]
     then
@@ -774,9 +809,9 @@ main()
     if [ $RUN_CONTEXT_CREATION -eq 1 ]
     then
       echo "We are going to create three contexts into our oc tool config"
-      context_creation "feddemocl1" ${CLUSTER1_API_URL} ${CLUSTER1_ADMIN_PWD}
-      context_creation "feddemocl2" ${CLUSTER2_API_URL} ${CLUSTER2_ADMIN_PWD}
-      context_creation "feddemocl3" ${CLUSTER3_API_URL} ${CLUSTER3_ADMIN_PWD}
+      context_creation "feddemocl1" ${CLUSTER1_API_URL} ${CLUSTER1_ADMIN} ${CLUSTER1_ADMIN_PWD}
+      context_creation "feddemocl2" ${CLUSTER2_API_URL} ${CLUSTER2_ADMIN} ${CLUSTER2_ADMIN_PWD}
+      context_creation "feddemocl3" ${CLUSTER3_API_URL} ${CLUSTER3_ADMIN} ${CLUSTER3_ADMIN_PWD}
       if [[ "$MODE" == "demo-cleanup" || "$MODE" == "full-cleanup" ]]
       then
         echo "Cleaning up demo resources"
