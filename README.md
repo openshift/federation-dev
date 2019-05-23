@@ -20,7 +20,7 @@ which is included within OpenShift 4.1, to install the Federation Operator.
 OpenShift 3.11 versions for the simple application scenario are also available:
 
 * Using [Minishift](./README-minishift.md)
-* Using [CDK](./README-minishift.md)
+* Using [CDK](./README-cdk.md)
 
 ### Cluster Scoped
 At the moment cluster scoped federation is not supported by the operator. Once the cluster scoped option is enabled via the operator we will update the instructions to cover that use case as well.
