@@ -1,6 +1,6 @@
 # Automated Demo
 
-This demo is intended to be used during Kubefed presentations.
+This demo is intended to be used during KubeFed presentations.
 
 ## Requirements
 
@@ -18,10 +18,18 @@ This demo is intended to be used during Kubefed presentations.
 The `inventory.json` files requires the following information:
 
 * cluster1.url - Cluster1 domain name. e.g: east-1.example.com 
+* cluster1.ocp_version - Cluster1 OCP Version. e.g: 3
+* cluster1.admin_user - Cluster 1 admin user. e.g: admin
+* cluster1.admin_password - Cluster 1 admin password. e.g: ver1secur3
 * cluster2.url - Cluster2 domain name. e.g: east-2.example.com
+* cluster2.ocp_version - Cluster2 OCP Version. e.g: 4
+* cluster2.admin_user - Cluster 2 admin user. e.g: kubeadmin
+* cluster2.admin_password - Cluster 2 admin password. e.g: ver1secur3
 * cluster3.url - Cluster3 domain name. e.g: west-2.example.com
+* cluster3.ocp_version - Cluster3 OCP Version. e.g: 4
+* cluster3.admin_user - Cluster 3 admin user. e.g: kubeadmin
+* cluster3.admin_password - Cluster 3 admin password. e.g: ver1secur3
 * pacman_lb_url - The DNS record configured to point to our Pacman Load Balancer. e.g: pacman.example.com
-* admin_user - Username which can connect to all clusters using the passwords defined in the cluster sections
 
 ## auto-demo options
 
