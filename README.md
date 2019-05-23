@@ -11,8 +11,8 @@ There are two ways to use Kubefed currently: Namespace and Cluster scoped.
 
 ### Namespace Scoped labs
 Namespace scoped Federation will initially be the only supported mechanism for federating
-multiple OpenShift/Kubernetes environments. Namespace scoped Federation uses OperatorHub
-which is included within OpenShift 4.1 to install the Federation Operator.
+multiple OpenShift/Kubernetes environments. Namespace scoped Federation uses OperatorHub,
+which is included within OpenShift 4.1, to install the Federation Operator.
 
 * A simple application federated [OpenShift Container Plaform 4](./README-ocp4.md)
 * Federated MongoDB and *Pacman* [Federating an application with a Database](./federated-mongodb/README.md)
