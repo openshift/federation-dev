@@ -23,4 +23,4 @@ OpenShift 3.11 versions for the simple application scenario are also available:
 * Using [CDK](./README-minishift.md)
 
 ### Cluster Scoped
-At the moment cluster scoped federation is not supported by the operator. Once the cluster scoped option is enabled via the operator we will update the instructions to cover that user case as well.
+At the moment cluster scoped federation is not supported by the operator. Once the cluster scoped option is enabled via the operator we will update the instructions to cover that use case as well.
