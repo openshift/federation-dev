@@ -4,5 +4,7 @@ metadata:
   name: installed-federation-changemeNS
   namespace: openshift-marketplace
 spec:
+  csDisplayName: Community Operators
+  csPublisher: Community
   targetNamespace: changemeNS
-  packages: federation
+  packages: kubefed-operator

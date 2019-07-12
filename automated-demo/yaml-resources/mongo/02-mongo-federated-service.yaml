@@ -1,4 +1,4 @@
-apiVersion: types.federation.k8s.io/v1alpha1
+apiVersion: types.kubefed.k8s.io/v1beta1
 kind: FederatedService
 metadata:
   name: mongo
@@ -18,7 +18,7 @@ spec:
       selector:
         name: mongo
   placement:
-    clusterNames:
-    - feddemocl1
-    - feddemocl2
-    - feddemocl3
+    clusters:
+    - name: feddemocl1
+    - name: feddemocl2
+    - name: feddemocl3

@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # GLOBAL VAR
-KUBEFED_RELEASE="v0.0.10"
+KUBEFED_RELEASE="v0.1.0-rc3"
+CSV_RELEASE="v0.1.0"
 
 usage()
 {
@@ -198,11 +199,11 @@ check_federated_clusters_ready()
   WAIT=0
   MAX_WAIT=300
   echo "Checking if Federated Clusters are ready"
-  FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe federatedclusters -n $DEMO_NAMESPACE | grep -c ClusterReady)
+  FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n $DEMO_NAMESPACE | grep -c ClusterReady)
   DESIRED_READY_CLUSTERS=3
   while [ $READY -eq 0 ]
   do
-    FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe federatedclusters -n $DEMO_NAMESPACE | grep -c ClusterReady)
+    FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n $DEMO_NAMESPACE | grep -c ClusterReady)
     if [ "0$FEDERATED_CLUSTERS_STATE_READY" -eq "0$DESIRED_READY_CLUSTERS" ]
     then
       echo "Federated Clusters are ready"
@@ -234,7 +235,8 @@ download_kubefed_binary()
   if [ ! -s "bin/kubefedctl" ]
   then
     echo "Downloading kubefedctl binary"
-    run_ok_or_fail "curl -Ls https://github.com/kubernetes-sigs/kubefed/releases/download/${KUBEFED_RELEASE}/kubefedctl.tgz -o - | tar xvz -C ./bin/" "0" "1"
+    KUBEFED_BIN_RELEASE=$(echo $KUBEFED_RELEASE | sed "s/v//g")
+    run_ok_or_fail "curl -Ls https://github.com/kubernetes-sigs/kubefed/releases/download/${KUBEFED_RELEASE}/kubefedctl-${KUBEFED_BIN_RELEASE}-linux-amd64.tgz -o - | tar xvz -C ./bin/" "0" "1"
   fi
 }
 
@@ -244,30 +246,52 @@ setup_kubefed()
   echo "Creating namespace ${DEMO_NAMESPACE} for deploying the demo"
   run_ok_or_fail "oc --context=feddemocl1 create ns ${DEMO_NAMESPACE}" "0" "1"
   echo "Deploying Federation Operator on Host Cluster in namespace ${DEMO_NAMESPACE}"
-  echo "Configuring CatalogSourceConfig and Subscription with demo data"
-  cp -pf yaml-resources/kubefed-operator/01-catalog-source-config.yaml yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml &> /dev/null
-  cp -pf yaml-resources/kubefed-operator/02-federation-operator-group.yaml yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml &> /dev/null
-  cp -pf yaml-resources/kubefed-operator/03-federation-subscription.yaml yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml &> /dev/null
-  run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml' "1" "1" 
-  run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml' "1" "1" 
-  run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml' "1" "1" 
-  run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace create -f yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml" "0" "1"
-  wait_for_csv_completed "feddemocl1" "${DEMO_NAMESPACE}" "federation.${KUBEFED_RELEASE}"
+  # Here detect if feddemocl1 is 3.11 or 4.X
+  
+  HOST_CLUSTER_VERSION=$(oc --context=feddemocl1 get clusterversion version -o jsonpath='{.spec.channel}' || echo "3") 
+  if [ ${HOST_CLUSTER_VERSION} == "3" ]
+  then
+    echo "Deploying OLM"
+    cp -pf yaml-resources/olm/01-olm.yaml yaml-resources/olm/01-olm-mod.yaml &> /dev/null
+    cp -pf yaml-resources/olm/02-olm.yaml yaml-resources/olm/02-olm-mod.yaml &> /dev/null
+    cp -pf yaml-resources/olm/03-subscription.yaml yaml-resources/olm/03-subscription-mod.yaml &> /dev/null
+    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/olm/01-olm-mod.yaml' "1" "1"
+    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/olm/02-olm-mod.yaml' "1" "1"
+    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/olm/03-subscription-mod.yaml' "1" "1"
+    run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/01-olm-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/02-olm-mod.yaml" "0" "1"
+    wait_for_deployment_ready "feddemocl1" "olm" "olm-operator"
+    wait_for_deployment_ready "feddemocl1" "olm" "catalog-operator"
+    echo "Configuring CatalogSourceConfig and Subscription with demo data"
+    run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/olm/03-subscription-mod.yaml" "0" "1"
+  else
+    echo "Configuring CatalogSourceConfig and Subscription with demo data"
+    cp -pf yaml-resources/kubefed-operator/01-catalog-source-config.yaml yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml &> /dev/null
+    cp -pf yaml-resources/kubefed-operator/02-federation-operator-group.yaml yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml &> /dev/null
+    cp -pf yaml-resources/kubefed-operator/03-federation-subscription.yaml yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml &> /dev/null
+    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml' "1" "1" 
+    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml' "1" "1" 
+    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml' "1" "1" 
+    run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace create -f yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml" "0" "1"
+  fi
+  wait_for_csv_completed "feddemocl1" "${DEMO_NAMESPACE}" "kubefed-operator.${CSV_RELEASE}"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/04-kubefed-resource.yaml"
+  wait_for_deployment_ready "feddemocl1" "${DEMO_NAMESPACE}" "kubefed-controller-manager"
   echo "Enabling federated resources on Host Cluster (may take a while)"
   for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps
   do
-    run_ok_or_fail "./bin/kubefedctl enable "${type}" --federation-namespace=${DEMO_NAMESPACE} --host-cluster-context=feddemocl1" "0" "1"
+    run_ok_or_fail "./bin/kubefedctl enable "${type}" --kubefed-namespace=${DEMO_NAMESPACE} --host-cluster-context=feddemocl1" "0" "1"
   done
   echo "Joining Cluster1 to ClusterRegistry"
-  run_ok_or_fail "./bin/kubefedctl join feddemocl1 --host-cluster-context feddemocl1 --add-to-registry --v=2 --federation-namespace=${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "./bin/kubefedctl join feddemocl1 --host-cluster-context feddemocl1 --v=2 --kubefed-namespace=${DEMO_NAMESPACE}" "0" "1"
   echo "Joining Cluster2 to ClusterRegistry"
-  run_ok_or_fail "./bin/kubefedctl join feddemocl2 --host-cluster-context feddemocl1 --add-to-registry --v=2 --federation-namespace=${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "./bin/kubefedctl join feddemocl2 --host-cluster-context feddemocl1 --v=2 --kubefed-namespace=${DEMO_NAMESPACE}" "0" "1"
   echo "Joining Cluster3 to ClusterRegistry"
-  run_ok_or_fail "./bin/kubefedctl join feddemocl3 --host-cluster-context feddemocl1 --add-to-registry --v=2 --federation-namespace=${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "./bin/kubefedctl join feddemocl3 --host-cluster-context feddemocl1 --v=2 --kubefed-namespace=${DEMO_NAMESPACE}" "0" "1"
   check_federated_clusters_ready
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get federatedclusters" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get kubefedclusters" "1" "1"
   echo "feddemocl1 - ${CLUSTER1_URL}"
   echo "feddemocl2 - ${CLUSTER2_URL}"
   echo "feddemocl3 - ${CLUSTER3_URL}"
@@ -421,12 +445,12 @@ mongo_pacman_demo_cleanup()
   echo "Disabling federated resources on Host Cluster (may take a while)"
   for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps
   do
-    run_ok_or_fail "./bin/kubefedctl disable "${type}" --federation-namespace=${DEMO_NAMESPACE} --host-cluster-context=feddemocl1" "0" "1" "1"
+    run_ok_or_fail "./bin/kubefedctl disable "${type}" --kubefed-namespace=${DEMO_NAMESPACE} --host-cluster-context=feddemocl1" "0" "1" "1"
   done
   echo "Deleting Subscription"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete subscription federation" "0" "1"
   echo "Deleting ClusterServiceVersion"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete csv federation.${KUBEFED_RELEASE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete csv kubefed-operator.${CSV_RELEASE}" "0" "1"
   echo "Deleting CatalogSourceConfig"
   run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace delete catalogsourceconfig installed-federation-${DEMO_NAMESPACE}" "0" "1"
   echo "Deleting OperatorGroup"
@@ -659,10 +683,10 @@ mongo_pacman_demo()
   fi
   echo "13. Well, everything should be working fine. Let's create some chaos, what will happen if primary mongo pod gets deleted?"
   wait_for_input
-  PATCH='{"spec":{"overrides":[{"clusterName":"feddemocl1","clusterOverrides":[{"path":"spec.replicas","value":0}]}]}}'
+  PATCH='{"spec":{"overrides":[{"clusterName":"feddemocl1","clusterOverrides":[{"path":"/spec/replicas","value":0}]}]}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment mongo --type=merge -p '${PATCH}'" "0" "1"
   wait_for_pod_not_running "feddemocl1" "${DEMO_NAMESPACE}" "mongo"
-  PATCH='{"spec":{"placement":{"clusterNames":["feddemocl2","feddemocl3"]}}}'
+  PATCH='{"spec":{"placement":{"clusters":[{"name":"feddemocl2"},{"name":"feddemocl3"}]}}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federatedpersistentvolumeclaims mongo --type=merge -p '${PATCH}'" "0" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pods --selector='name=mongo'" "1" "1"
   echo "14. Let's continue playing and see if we can save highscores. http://${PACMAN_URL}. (Note: Saving the high score could take longer than usual)"
@@ -674,13 +698,13 @@ mongo_pacman_demo()
     simulate_pacman_play "Gary" "GCP" "us-west-1b" "padman-pod-2" "149" "1"
   fi
   echo "15. Well, our Pacman application is not that famous, let's scale it so it only runs on one of our clusters"
-  PATCH='{"spec":{"overrides":[{"clusterName":"feddemocl1","clusterOverrides":[{"path":"spec.replicas","value":0}]},{"clusterName":"feddemocl3","clusterOverrides":[{"path":"spec.replicas","value":0}]}]}}'
+  PATCH='{"spec":{"overrides":[{"clusterName":"feddemocl1","clusterOverrides":[{"path":"/spec/replicas","value":0}]},{"clusterName":"feddemocl3","clusterOverrides":[{"path":"spec.replicas","value":0}]}]}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment pacman --type=merge -p '${PATCH}'" "0" "1"
   sleep 3
   run_ok_or_fail 'for cluster in feddemocl1 feddemocl2 feddemocl3;do echo **Cluster ${cluster}**;oc --context=$cluster -n ${DEMO_NAMESPACE} get pods --selector="name=pacman";done' "1" "1"
   echo "16. Our engineers have been working hard during the weekend and the cluster where the primary mongo pod was deployed came back to life"
   wait_for_input
-  PATCH='{"spec":{"placement":{"clusterNames":["feddemocl1","feddemocl2","feddemocl3"]}}}'
+  PATCH='{"spec":{"placement":{"clusters":[{"name":"feddemocl1"},{"name":"feddemocl2"},{"name":"feddemocl3"}]}}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federatedpersistentvolumeclaims mongo --type=merge -p '${PATCH}'" "0" "1"
   sleep 3
   PATCH='{"spec":{"overrides":[]}}'
