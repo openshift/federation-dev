@@ -10,7 +10,7 @@ Kubernetes Federation is a tool to sync (aka "federate") a set of Kubernetes obj
 There are two ways to use Kubefed currently: Namespace and Cluster scoped.
 
 ### Namespace Scoped labs
-Namespace scoped Federation will initially be the only supported mechanism for federating
+Namespace scoped Federation was initially the only supported mechanism for federating
 multiple OpenShift/Kubernetes environments. Namespace scoped Federation uses OperatorHub,
 which is included within OpenShift 4.1, to install the Federation Operator.
 
@@ -23,4 +23,6 @@ OpenShift 3.11 versions for the simple application scenario are also available:
 * Using [CDK](./README-cdk.md)
 
 ### Cluster Scoped
-At the moment cluster scoped federation is not supported by the operator. Once the cluster scoped option is enabled via the operator we will update the instructions to cover that use case as well.
+Cluster scoped KubeFed is now supported as of version 0.1.0 of the KubeFed
+operator. A walkthrough using cluster scoped KubeFed is currently under
+development.
