@@ -19,6 +19,7 @@ Namespace scoped Federation was initially the the only supported mechanism for f
 multiple OpenShift/Kubernetes environments. Namespace scoped Federation uses OperatorHub,
 which is included within OpenShift 4.1, to install the Federation Operator.
 
+
 [Lab 1 - Introduction and Prerequisites](./labs/1.md)<br>
 [Lab 2 - Create OpenShift Clusters and Configure Context](./labs/2.md)<br>
 [Lab 3 - Deploy Federation](./labs/3.md)<br>
@@ -27,3 +28,9 @@ which is included within OpenShift 4.1, to install the Federation Operator.
 [Lab 6 - Kubeconfig, Tools and Join Clusters](./labs/6.md)<br>
 [Lab 7 - Creating Certificates](./labs/7.md)<br>
 [Lab 8 - Deploying MongoDB](./labs/8.md)<br>
+
+### Cluster Scoped
+Cluster scoped KubeFed is now supported as of version 0.1.0 of the KubeFed
+operator. A walkthrough using cluster scoped KubeFed is currently under
+development.
+

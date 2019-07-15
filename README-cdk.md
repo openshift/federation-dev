@@ -26,6 +26,8 @@
 <a id="markdown-introduction" name="introduction"></a>
 # Introduction
 
+**Note** //This document is undergoing revisions with the v0.1.0 release of KubeFed which takes the Federation Operator and KubeFed project into Beta status.//
+
 This demo is a simple deployment of [Federation Operator](https://operatorhub.io/operator/alpha/federation.v0.0.10) on two OpenShift
 clusters. A sample application is deployed to both clusters through the Federation controller.
 

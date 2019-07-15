@@ -1,0 +1,7 @@
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+!01-olm.yaml
+!02-olm.yaml
+!03-subscription.yaml
