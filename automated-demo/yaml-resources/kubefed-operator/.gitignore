@@ -1,7 +1,0 @@
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore
-!01-catalog-source-config.yaml
-!02-federation-operator-group.yaml
-!03-federation-subscription.yaml
