@@ -1,8 +1,0 @@
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore
-!01-mongo-federated-secret.yaml
-!02-pacman-federated-service.yaml
-!03-pacman-federated-ingress.yaml
-!04-pacman-federated-deployment-rs.yaml
