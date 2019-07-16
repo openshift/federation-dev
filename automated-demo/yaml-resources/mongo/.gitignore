@@ -1,8 +1,0 @@
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore
-!01-mongo-federated-secret.yaml
-!02-mongo-federated-service.yaml
-!03-mongo-federated-pvc.yaml
-!04-mongo-federated-deployment-rs.yaml

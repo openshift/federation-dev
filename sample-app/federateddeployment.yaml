@@ -1,4 +1,4 @@
-apiVersion: types.federation.k8s.io/v1alpha1
+apiVersion: types.kubefed.k8s.io/v1beta1
 kind: FederatedDeployment
 metadata:
   name: test-deployment
@@ -22,11 +22,11 @@ spec:
           - image: nginx
             name: nginx
   placement:
-    clusterNames:
-    - cluster1
-    - cluster2
+    clusters:
+    - name: cluster1
+    - name: cluster2
   overrides:
   - clusterName: cluster2
     clusterOverrides:
-    - path: spec.replicas
+    - path: "/spec/replicas"
       value: 5
