@@ -1,6 +1,6 @@
 # Federation Dev
 This repository is a place holder for various demonstrations, labs, and examples
-of the use of Kubefed.
+of the use of KubeFed.
 
 ## What is Federation
 Put quite simply, Federation is the process of connecting one or more
@@ -18,15 +18,18 @@ Namespace scoped KubeFed was initially the only supported mechanism for federati
 multiple OpenShift/Kubernetes environments. Namespace scoped KubeFed uses OperatorHub,
 which is included within OpenShift 4.1, to install the KubeFed Operator.
 
-* A simple application federated [OpenShift Container Plaform 4](./README-ocp4.md)
-* Federated MongoDB and *Pacman* [Federating an application with a Database](./federated-mongodb/README.md)
 
-OpenShift 3.11 versions for the simple application scenario are also available:
-
-* Using [Minishift](./README-minishift.md)
-* Using [CDK](./README-cdk.md)
+[Lab 1 - Introduction and Prerequisites](./labs/1.md)<br>
+[Lab 2 - Create OpenShift Clusters and Configure Context](./labs/2.md)<br>
+[Lab 3 - Deploy Federation](./labs/3.md)<br>
+[Lab 4 - Example Application One](./labs/4.md)<br>
+[Lab 5 - Federating MongoDB Introduction and namespace Creation](./labs/5.md)<br>
+[Lab 6 - Kubeconfig, Tools and Join Clusters](./labs/6.md)<br>
+[Lab 7 - Creating Certificates](./labs/7.md)<br>
+[Lab 8 - Deploying MongoDB](./labs/8.md)<br>
 
 ### Cluster Scoped
 Cluster scoped KubeFed is now supported as of version 0.1.0 of the KubeFed
 operator. A walkthrough using cluster scoped KubeFed is currently under
 development.
+

@@ -1,3 +1,4 @@
+=======
 **Table of Contents**
 
 <!-- TOC depthFrom:1 insertAnchor:true orderedList:true -->
@@ -112,6 +113,7 @@ The presence and unique naming of the client contexts are important because the
 referenced by context name.
 
 <a id="markdown-deploy-federation" name="deploy-federation"></a>
+
 ## Deploy Federation
 
 Federation member clusters do not require KubeFed to be installed on them, but
