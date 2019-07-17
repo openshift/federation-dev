@@ -113,7 +113,7 @@ get_data_from_user()
   read -rp "Cluster3 OCP Version [3|4]: " CLUSTER3_VERSION
   read -rp "Pacman LB URL: " PACMAN_URL
   read -rp "OCP Admin User: " ADMIN_USER
-  read -rp "Cluster1 Admin: " CLUSTER1_ADMIN_PWD
+  read -rp "Cluster1 Admin: " CLUSTER1_ADMIN
   read -rp "Cluster1 Admin Password: " CLUSTER1_ADMIN_PWD
   read -rp "Cluster2 Admin: " CLUSTER2_ADMIN
   read -rp "Cluster2 Admin Password: " CLUSTER2_ADMIN_PWD
@@ -280,7 +280,7 @@ setup_kubefed()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/04-kubefed-resource.yaml"
   wait_for_deployment_ready "feddemocl1" "${DEMO_NAMESPACE}" "kubefed-controller-manager"
   echo "Enabling federated resources on Host Cluster (may take a while)"
-  for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps
+  for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
   do
     run_ok_or_fail "./bin/kubefedctl enable "${type}" --kubefed-namespace=${DEMO_NAMESPACE} --host-cluster-context=feddemocl1" "0" "1"
   done
@@ -431,6 +431,9 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedingress pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federateddeployment pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedservice pacman" "0" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedserviceaccount pacman" "0" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedclusterrolebinding pacman" "0" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedclusterrole pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedsecret mongodb-users-secret" "0" "1" "1"
   echo "Deleting MongoDB resources"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federateddeployment mongo" "0" "1" "1"
@@ -443,7 +446,7 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl3 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
   echo "Deleting Federation"
   echo "Disabling federated resources on Host Cluster (may take a while)"
-  for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps
+  for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
   do
     run_ok_or_fail "./bin/kubefedctl disable "${type}" --kubefed-namespace=${DEMO_NAMESPACE} --host-cluster-context=feddemocl1" "0" "1" "1"
   done
