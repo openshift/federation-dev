@@ -5,3 +5,4 @@
 !01-catalog-source-config.yaml
 !02-federation-operator-group.yaml
 !03-federation-subscription.yaml
+!04-kubefed-resource.yaml

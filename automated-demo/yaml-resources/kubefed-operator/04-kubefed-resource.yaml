@@ -1,0 +1,6 @@
+apiVersion: operator.kubefed.io/v1alpha1
+kind: KubeFed
+metadata:
+  name: kubefed-resource
+spec: 
+  scope: Namespaced
