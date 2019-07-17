@@ -137,8 +137,8 @@ cluster-scoped, see [README-ocp4-cs.md]
    1. On the left panel click `Catalog -> Operator Hub`.
    2. Select `KubeFed` from operator list.
    3. If a warning about use of Community Operators is shown click `Continue`.
-   4. Select `A specific namespace on the cluster` to try namespaced mode.
-   5. Click `Install`.
+   4. Click `Install`.
+   5. Select `A specific namespace on the cluster` to try namespaced mode.
    6. Make sure `test-namespace` is selected as destination namespace.
    7. Click `Subscribe`.
 4. Check the Operator Subscription status.
