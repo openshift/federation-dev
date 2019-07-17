@@ -59,16 +59,16 @@ NOTE: The version may change as the operator matures. Verify that the version of
 Federation matches the version of `kubefedctl`.
 
 ~~~sh
-curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.0.10/kubefedctl.tgz
-tar xzf kubefedctl.tgz -C ~/bin
-rm -f kubefedctl.tgz
+curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc3/kubefedctl-0.1.0-rc3-linux-amd64.tgz
+tar xzf kubefedctl-0.1.0-rc3-linux-amd64.tgz -C ~/bin
+rm -f kubefedctl-0.1.0-rc3-linux-amd64.tgz
 ~~~
 
 Verify that `kubefedctl` is working:
 ~~~sh
 kubefedctl version
 
-kubefedctl version: version.Info{Version:"v0.0.10-dirty", GitCommit:"71d233ede685707df554ef653e06bf7f0229415c", GitTreeState:"dirty", BuildDate:"2019-05-06T22:30:31Z", GoVersion:"go1.11.2", Compiler:"gc", Platform:"linux/amd64"}
+kubefedctl version: version.Info{Version:"v0.1.0-rc3", GitCommit:"d188d227fe3f78f33d74d9a40b3cb701c471cc7e", GitTreeState:"clean", BuildDate:"2019-06-25T00:27:58Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
 
 ## Joining Clusters
