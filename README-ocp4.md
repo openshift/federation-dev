@@ -123,8 +123,8 @@ the KubeFed control plane.
 In order to deploy the operator, we are going to use `Operator Hub` within the OCP4 Web Console.
 
 The KubeFed operator supports two modes of operation: namespace scoped and
-cluster scoped. This guide will walk through federating a single namespace. For
-cluster-scoped, see [README-ocp4-cs.md]
+cluster scoped. This guide will walk through federating a single namespace.
+For a cluster-scoped guide, [click here](README-ocp4-cs.md)
 
 1. Login into `cluster1` web console as `kubeadmin` user.
    1. Login details are reported by the installer in the file `auth/kubeadmin-password`.
