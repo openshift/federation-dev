@@ -1,12 +1,12 @@
 # Federated MongoDB
-The files within this directory are used with the Federation operator to show
+The files within this directory are used with the Kubefed Operator to show
 MongoDB running on multiple OpenShift clusters. An accompanying video
 is [here](https://youtu.be/StNJupmZ5Mo). This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
 clusters have already been deployed using of the deployment mechanisms defined at
 https://cloud.openshift.com.
 
 ## Creating a Namespace and Deploying the Operator
-The first step is to decide which of the clusters will run the Federation Operator.
+The first step is to decide which of the clusters will run the Kubefed Operator.
 Only one cluster runs the federation-controller-manager.
 
 A new project of *federated-mongo* is created within the OpenShift UI on cluster east1. Once the project is created the next step is to deploy the operator.
@@ -15,19 +15,19 @@ Select OperatorHub</br>
 ![OperatorHub](../images/mongooperator.png)
 
 
-Once the OperatorHub loads click Federation </br>
-![Federation](../images/federation.png)
+Once the OperatorHub loads click KubeFed Operator </br>
+![Federation](../images/kubefed.png)
 
-Once Federation has been chosen, information about the Operator will appear. It is
+Once the Kubefed Operator has been chosen, information about the Operator will appear. It is
 important to take note of the Operator Version as this will be needed when deciding
 which version of Kubefedctl to use.
 
 Select Install</br>
 ![Install Federation](../images/install.png)
 
-Subscribe to the Federation Operator in the *federated-mongo* namespace by clicking the
+Choose the Installation Mode to "A specific namespace on the cluster" and subscribe to the Federation Operator in the *federated-mongo* namespace by clicking the
 *Subscribe* button.
-![Subscribe Federation](../images/subsribe.png)
+![Subscribe Federation](../images/subscribe.png)
 
 Back at the command line run the following command looking for the status of Succeeded
 
@@ -78,14 +78,31 @@ Now that the `kubefedctl` binary has been acquired the next step is joining the 
 Using the `kubeconfig` file that was generated, verify the Operator has been successfully deployed.
 ~~~sh
 $ oc get csv -n federated-mongo
-NAME                DISPLAY      VERSION   REPLACES   PHASE
-federation.v0.0.10   Federation   0.0.10                Succeeded
+NAME                      DISPLAY            VERSION   REPLACES   PHASE
+kubefed-operator.v0.1.0   Kubefed Operator   0.1.0                Succeeded
 ~~~
+
+## Enable the Kubefed Controller Manager
+The Kubefed Controller has to be enabled for the namespace.
+
+~~~sh
+cat <<-EOF | oc apply -n ${NAMESPACE} -f -
+---
+apiVersion: operator.kubefed.io/v1alpha1
+kind: KubeFed
+metadata:
+  name: kubefed-resource
+spec: 
+  scope: Namespaced
+---
+EOF
+~~~
+
 The next step is to federate the clusters using `kubefedctl`.
 ~~~sh
-kubefedctl join east1 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
-kubefedctl join east2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
-kubefedctl join west2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
+kubefedctl join east1 --host-cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
+kubefedctl join east2 --host-cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
+kubefedctl join west2 --host-cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
 
 for type in namespaces deployments.apps ingresses.extensions secrets serviceaccounts services persistentvolumeclaims configmaps
 do

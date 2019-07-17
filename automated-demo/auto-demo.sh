@@ -433,6 +433,7 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedservice pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedserviceaccount pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedclusterrolebinding pacman" "0" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedclusterroles.types.kubefed.k8s.io pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedclusterrole pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedsecret mongodb-users-secret" "0" "1" "1"
   echo "Deleting MongoDB resources"
