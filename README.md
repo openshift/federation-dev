@@ -10,7 +10,7 @@ Kubernetes Federation is a tool to sync (aka "federate") a set of Kubernetes obj
 There are two ways to use Kubefed currently: Namespace and Cluster scoped.
 
 ### RHTE lab
-If you are attend Red Hat tech exchange follow the link below will bring you to the first lab.
+If you are attend Red Hat tech exchange follow the link below will bring you to the first lab.<br>
 [Red Hat Tech Exchange Lab](./labs/1.md)<br>
 
 ### Namespace Scoped labs
