@@ -11,7 +11,7 @@ There are two ways to use Kubefed currently: Namespace and Cluster scoped.
 
 ### RHTE lab
 If you are attend Red Hat tech exchange follow the link below will bring you to the first lab.<br>
-[Red Hat Tech Exchange Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability](./labs/1.md)<br>
+[Red Hat Tech Exchange Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability](./labs/README.md)<br>
 
 ### Namespace Scoped labs
 Namespace scoped Federation was initially the only supported mechanism for federating
