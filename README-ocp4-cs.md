@@ -120,10 +120,25 @@ the KubeFed control plane.
 
 In order to deploy the operator, we are going to use `Operator Hub` within the OCP4 Web Console.
 
-The KubeFed operator supports two modes of operation: namespace scoped and
-cluster scoped. This guide will walk through federating all namespaces through cluster scoped KubeFed.
-There is also a guide to [namespace scoped KubeFed for OCP 4](README-ocp4.md)
+KubeFed supports two modes of operation: namespace scoped and cluster scoped.
+This guide will walk through federating all namespaces through cluster scoped
+KubeFed. There is also a guide to [namespace scoped KubeFed for OCP
+4](README-ocp4.md)
 
+A note on namespaces: The KubeFed operator itself supplies an option to either
+namespace the operator or install cluster-wide. This is a different concept
+from KubeFed itself being either namespace or cluster scoped. If you choose
+`All namespaces on the cluster` during the **operator** installation, it will
+install in the `openshift-operators` namespace, and you will need to supply the
+argument `--kubefed-namespace=openshift-operators` to all invocations of the
+`kubefedctl` command in this document. These instructions will instead guide
+you through installing the operator to the `kube-federation-system` namespace,
+which is the default namespace for the `kubefedctl` command to store its objects.
+The namespace must be created on the command line because the web UI considers
+namespaces starting with `kube` to be protected.
+
+0. Create the `kube-federation-system` namespace.
+   1. `oc create ns kube-federation-system`
 1. Login into `cluster1` web console as `kubeadmin` user.
    1. Login details are reported by the installer in the file `auth/kubeadmin-password`.
 2. Install KubeFed from `Operator Hub`.
@@ -131,8 +146,9 @@ There is also a guide to [namespace scoped KubeFed for OCP 4](README-ocp4.md)
    2. Select `KubeFed` from operator list.
    3. If a warning about use of Community Operators is shown click `Continue`.
    4. Click `Install`.
-   5. Under `Installation Method`, leave the selection on the default, `All namespaces on the cluster`.
-   6. Click `Subscribe`.
+   5. Under `Installation Method`, Select A `specific namespace on the cluster`
+   6. Select `kube-federation-system` as the namespace.
+   7. Click `Subscribe`.
 3. Check the Operator Subscription status.
    1. On the left panel click `Catalog -> Operator Management`.
    2. Click `Operator Subscriptions` tab.
@@ -142,13 +158,13 @@ There is also a guide to [namespace scoped KubeFed for OCP 4](README-ocp4.md)
    2. Click `Kubefed Operator`.
    3. Under `Provided APIs`, find `KubeFed`, and click `Create New`.
    4. Change the `spec: scope:` from `Namespaced` to `Cluster`.
-   4. Note the namespace for the operator and KubeFed CR, `openshift-operators`, and click `Create`.
+   5. Click `Create`
 
 If everything works as expected, there should be a kubefed-controller-manager
-Deployment with two pods running in `openshift-operators`.
+Deployment with two pods running in `kube-federation-system`.
 
 ~~~sh
-oc --context=cluster1 -n openshift-operators get pods
+oc --context=cluster1 -n kube-federation-system get pods
 
 NAME                                          READY   STATUS    RESTARTS   AGE
 kubefed-controller-manager-67d5d5cc99-j9zh9   1/1     Running   0          1m
@@ -165,7 +181,7 @@ each type by visiting the `All Instances` tab of the `Kubefed Operator` under
 ~~~sh
 for type in namespaces secrets serviceaccounts services configmaps deployments.apps
 do
-    kubefedctl enable $type --kubefed-namespace openshift-operators
+    kubefedctl enable $type
 done
 ~~~
 
@@ -176,7 +192,7 @@ Verify that there are no clusters yet (but note
 that you can already reference the CRDs for federated clusters):
 
 ~~~sh
-oc get kubefedclusters -n openshift-operators
+oc get kubefedclusters -n kube-federation-system
 
 No resources found.
 ~~~
@@ -187,12 +203,10 @@ Now use the `kubefedctl` tool to register (*join*) the two clusters:
 kubefedctl join cluster1 \
             --host-cluster-context cluster1 \
             --cluster-context cluster1 \
-            --kubefed-namespace=openshift-operators \
             --v=2
 kubefedctl join cluster2 \
             --host-cluster-context cluster1 \
             --cluster-context cluster2 \
-            --kubefed-namespace=openshift-operators \
             --v=2
 ~~~
 
@@ -209,7 +223,7 @@ Verify that the federated clusters are registered and in a ready state (this
 can take a moment):
 
 ~~~sh
-oc -n openshift-operators get kubefedclusters 
+oc -n kube-federation-system get kubefedclusters 
 
 NAME       READY   AGE
 cluster1   True    2m
@@ -231,7 +245,7 @@ oc create ns test-namespace
 Next, add the test-namespace to KubeFed using the federate command:
 
 ~~~sh
-kubefedctl --kubefed-namespace openshift-operators federate namespace test-namespace
+kubefedctl federate namespace test-namespace
 ~~~
 
 Verify that our test-namespace is present in both clusters now:
