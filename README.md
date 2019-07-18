@@ -1,6 +1,6 @@
 # Federation Dev
-This repository is a place holder for various demonstrations, labs, and examples
-of the use of Kubefed.
+This repository contains demonstrations, labs, and examples
+of the use of Kubefed and/or the management of multiple OpenShift clusters.
 
 ## What is Federation
 Put quite simply, Federation is the process of connecting one or more Kubernetes clusters. The explanation from OperatorHub states
@@ -11,7 +11,7 @@ There are two ways to use Kubefed currently: Namespace and Cluster scoped.
 
 ### RHTE lab
 If you are attend Red Hat tech exchange follow the link below will bring you to the first lab.<br>
-[Red Hat Tech Exchange Lab](./labs/1.md)<br>
+[Red Hat Tech Exchange Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability](./labs/1.md)<br>
 
 ### Namespace Scoped labs
 Namespace scoped Federation was initially the only supported mechanism for federating
