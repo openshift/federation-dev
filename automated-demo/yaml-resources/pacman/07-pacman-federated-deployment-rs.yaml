@@ -19,6 +19,7 @@ spec:
           labels:
             name: pacman
         spec:
+          imagePullPolicy: Always
           containers:
           - image: quay.io/rcook/pacman-nodejs-app:latest
             name: pacman

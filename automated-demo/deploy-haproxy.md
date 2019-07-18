@@ -16,7 +16,7 @@
 4. Create a namespace/use an existing one and create the configmap from our definition
 
   ```sh
-  oc -n <your_namespace> create configmap haproxy --from-file=yaml-resources/haproxy/haproxy
+  oc -n <your_namespace> create configmap haproxy --from-file=yaml-resources/haproxy/haproxy.tmpl
   ```
 5. Create the deployment and the service for haproxy
 
