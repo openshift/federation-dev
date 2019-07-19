@@ -4,7 +4,7 @@
 
 ### Accessing your dedicated lab environment using your provided GUID
 
-On your Red Hat Summit provided laptop, notice that the https://www.opentlc.com/gg/gg.cgi?profile=generic_summit[*Lab GUID Assignment page*^] is already loaded onto your Firefox web browser.
+On your laptop, browse to https://www.opentlc.com/gg/gg.cgi?profile=generic_summit[*Lab GUID Assignment page*^].
 From this page, you will be assigned your unique GUID, which you will use to access your unique lab environment and systems.
 
 Select the proper *Lab Code* from the drop down list. Find the lab `XXXXXXX - Hands on with Red Hat Multi-Cluster Federation: Application Portability`
