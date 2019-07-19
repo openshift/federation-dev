@@ -2,16 +2,16 @@ apiVersion: operators.coreos.com/v1alpha2
 kind: OperatorGroup
 metadata:
   name: operatorgroup
-  namespace: changemeNS
+  namespace: kube-federation-system
 spec:
   targetNamespaces:
-  - changemeNS
+  - kube-federation-system
 ---
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: federation
-  namespace: changemeNS
+  namespace: kube-federation-system
 spec:
   channel: alpha
   name: kubefed-operator

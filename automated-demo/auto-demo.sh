@@ -199,11 +199,11 @@ check_federated_clusters_ready()
   WAIT=0
   MAX_WAIT=300
   echo "Checking if Federated Clusters are ready"
-  FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n $DEMO_NAMESPACE | grep -c ClusterReady)
+  FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n kube-federation-system | grep -c ClusterReady)
   DESIRED_READY_CLUSTERS=3
   while [ $READY -eq 0 ]
   do
-    FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n $DEMO_NAMESPACE | grep -c ClusterReady)
+    FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n kube-federation-system | grep -c ClusterReady)
     if [ "0$FEDERATED_CLUSTERS_STATE_READY" -eq "0$DESIRED_READY_CLUSTERS" ]
     then
       echo "Federated Clusters are ready"
@@ -244,6 +244,7 @@ setup_kubefed()
 {
   download_kubefed_binary
   echo "Creating namespace ${DEMO_NAMESPACE} for deploying the demo"
+  run_ok_or_fail "oc --context=feddemocl1 create ns kube-federation-system" "0" "1"
   run_ok_or_fail "oc --context=feddemocl1 create ns ${DEMO_NAMESPACE}" "0" "1"
   echo "Deploying Federation Operator on Host Cluster in namespace ${DEMO_NAMESPACE}"
   # Here detect if feddemocl1 is 3.11 or 4.X
@@ -255,43 +256,38 @@ setup_kubefed()
     cp -pf yaml-resources/olm/01-olm.yaml yaml-resources/olm/01-olm-mod.yaml &> /dev/null
     cp -pf yaml-resources/olm/02-olm.yaml yaml-resources/olm/02-olm-mod.yaml &> /dev/null
     cp -pf yaml-resources/olm/03-subscription.yaml yaml-resources/olm/03-subscription-mod.yaml &> /dev/null
-    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/olm/01-olm-mod.yaml' "1" "1"
-    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/olm/02-olm-mod.yaml' "1" "1"
-    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/olm/03-subscription-mod.yaml' "1" "1"
     run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/01-olm-mod.yaml" "0" "1"
     run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/02-olm-mod.yaml" "0" "1"
     wait_for_deployment_ready "feddemocl1" "olm" "olm-operator"
     wait_for_deployment_ready "feddemocl1" "olm" "catalog-operator"
     echo "Configuring CatalogSourceConfig and Subscription with demo data"
-    run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/olm/03-subscription-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system create -f yaml-resources/olm/03-subscription-mod.yaml" "0" "1"
   else
     echo "Configuring CatalogSourceConfig and Subscription with demo data"
     cp -pf yaml-resources/kubefed-operator/01-catalog-source-config.yaml yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml &> /dev/null
     cp -pf yaml-resources/kubefed-operator/02-federation-operator-group.yaml yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml &> /dev/null
     cp -pf yaml-resources/kubefed-operator/03-federation-subscription.yaml yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml &> /dev/null
-    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml' "1" "1" 
-    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml' "1" "1" 
-    run_ok_or_fail 'sed -i "s/changemeNS/${DEMO_NAMESPACE}/g" yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml' "1" "1" 
     run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace create -f yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml" "0" "1"
-    run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml" "0" "1"
-    run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system create -f yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system create -f yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml" "0" "1"
   fi
-  wait_for_csv_completed "feddemocl1" "${DEMO_NAMESPACE}" "kubefed-operator.${CSV_RELEASE}"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/kubefed-operator/04-kubefed-resource.yaml"
-  wait_for_deployment_ready "feddemocl1" "${DEMO_NAMESPACE}" "kubefed-controller-manager"
+  wait_for_csv_completed "feddemocl1" "kube-federation-system" "kubefed-operator.${CSV_RELEASE}"
+  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system create -f yaml-resources/kubefed-operator/04-kubefed-resource.yaml"
+  wait_for_deployment_ready "feddemocl1" "kube-federation-system" "kubefed-controller-manager"
   echo "Enabling federated resources on Host Cluster (may take a while)"
   for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
   do
-    run_ok_or_fail "./bin/kubefedctl enable "${type}" --kubefed-namespace=${DEMO_NAMESPACE} --host-cluster-context=feddemocl1" "0" "1"
+    run_ok_or_fail "./bin/kubefedctl enable "${type}" --host-cluster-context feddemocl1" "0" "1"
   done
   echo "Joining Cluster1 to ClusterRegistry"
-  run_ok_or_fail "./bin/kubefedctl join feddemocl1 --host-cluster-context feddemocl1 --v=2 --kubefed-namespace=${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "./bin/kubefedctl join feddemocl1 --host-cluster-context feddemocl1 --v=2" "0" "1"
   echo "Joining Cluster2 to ClusterRegistry"
-  run_ok_or_fail "./bin/kubefedctl join feddemocl2 --host-cluster-context feddemocl1 --v=2 --kubefed-namespace=${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "./bin/kubefedctl join feddemocl2 --host-cluster-context feddemocl1 --v=2" "0" "1"
   echo "Joining Cluster3 to ClusterRegistry"
-  run_ok_or_fail "./bin/kubefedctl join feddemocl3 --host-cluster-context feddemocl1 --v=2 --kubefed-namespace=${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "./bin/kubefedctl join feddemocl3 --host-cluster-context feddemocl1 --v=2" "0" "1"
   check_federated_clusters_ready
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get kubefedclusters" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system get kubefedclusters" "1" "1"
+  run_ok_or_fail "kubefedctl federate namespace ${DEMO_NAMESPACE} --host-cluster-context feddemocl1" "1" "1"
   echo "feddemocl1 - ${CLUSTER1_URL}"
   echo "feddemocl2 - ${CLUSTER2_URL}"
   echo "feddemocl3 - ${CLUSTER3_URL}"
@@ -445,29 +441,27 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl2 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl3 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 delete federatednamespace ${DEMO_NAMESPACE}" "0" "1" "1"
   echo "Deleting Federation"
   echo "Disabling federated resources on Host Cluster (may take a while)"
   for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
   do
-    run_ok_or_fail "./bin/kubefedctl disable "${type}" --kubefed-namespace=${DEMO_NAMESPACE} --host-cluster-context=feddemocl1" "0" "1" "1"
+    run_ok_or_fail "./bin/kubefedctl disable "${type}"" "0" "1" "1"
   done
   echo "Deleting Subscription"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete subscription federation" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system delete subscription federation" "0" "1"
   echo "Deleting ClusterServiceVersion"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete csv kubefed-operator.${CSV_RELEASE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system delete csv kubefed-operator.${CSV_RELEASE}" "0" "1"
   echo "Deleting CatalogSourceConfig"
-  run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace delete catalogsourceconfig installed-federation-${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace delete catalogsourceconfig installed-federation-kube-federation-system" "0" "1"
   echo "Deleting OperatorGroup"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete operatorgroup federation" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system delete operatorgroup federation" "0" "1"
 }
 
 namespace_kubefed_cleanup()
 {
-  for cluster in feddemocl1 feddemocl2 feddemocl3
-  do
-    echo "Removing namespace ${namespace} from cluster ${cluster}"
-    run_ok_or_fail "oc --context=${cluster} delete namespace ${DEMO_NAMESPACE}" "0" "1"
-  done 
+  echo "Removing namespace ${namespace} from cluster ${cluster}"
+  run_ok_or_fail "oc --context=${cluster} delete federatednamespace ${DEMO_NAMESPACE}" "0" "1"
 }
 
 

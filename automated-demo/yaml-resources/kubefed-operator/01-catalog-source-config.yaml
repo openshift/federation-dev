@@ -1,10 +1,10 @@
 apiVersion: operators.coreos.com/v1
 kind: CatalogSourceConfig
 metadata:
-  name: installed-federation-changemeNS
+  name: installed-federation-kube-federation-system
   namespace: openshift-marketplace
 spec:
   csDisplayName: Community Operators
   csPublisher: Community
-  targetNamespace: changemeNS
+  targetNamespace: kube-federation-system
   packages: kubefed-operator
