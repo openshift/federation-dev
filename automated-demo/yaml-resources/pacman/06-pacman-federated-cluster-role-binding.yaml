@@ -20,5 +20,5 @@ spec:
     subjects:
     - kind: ServiceAccount
       name: pacman
-      namespace: pacmanv3
+      namespace: pacman
 
