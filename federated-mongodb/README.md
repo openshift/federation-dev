@@ -1,15 +1,15 @@
 # Federated MongoDB
 The files within this directory are used with the Kubefed Operator to show
 MongoDB running on multiple OpenShift clusters. An accompanying video
-is [here](https://youtu.be/StNJupmZ5Mo). This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
+is [here](https://youtu.be/avCPAJms3Fc) showing the 0.0.8 version of Kubefed. This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
 clusters have already been deployed using of the deployment mechanisms defined at
 https://cloud.openshift.com.
 
 ## Creating a Namespace and Deploying the Operator
 The first step is to decide which of the clusters will run the Kubefed Operator.
-Only one cluster runs the federation-controller-manager.
+Only one cluster runs the federation-controller-manager. IT
 
-A new project of *federated-mongo* is created within the OpenShift UI on cluster east1. Once the project is created the next step is to deploy the operator.
+A new project of *federated-mongo* needs to be created within the OpenShift UI on cluster east1. Once the project is created the next step is to deploy the operator.
 
 Select OperatorHub</br>
 ![OperatorHub](../images/mongooperator.png)
@@ -25,13 +25,9 @@ which version of Kubefedctl to use.
 Select Install</br>
 ![Install Federation](../images/install.png)
 
-Choose the Installation Mode to "A specific namespace on the cluster" and subscribe to the Federation Operator in the *federated-mongo* namespace by clicking the
+Choose the Installation Mode of "A specific namespace on the cluster" and subscribe to the Federation Operator in the *federated-mongo* namespace by clicking the
 *Subscribe* button.
 ![Subscribe Federation](../images/subscribe.png)
-
-Back at the command line run the following command looking for the status of Succeeded
-
-NOTE: This may take a few minutes
 
 ## Kubeconfig
 Specific items are required to be configured within the `kubeconfig` file before
@@ -52,11 +48,11 @@ oc config set-context east1
 ## Install the kubefedctl binary
 
 The `kubefedctl` tool manages federated cluster registration. Download the
-v0.0.10 release and unpack it into a directory in your PATH (the
+v0.0.1.0-rc3 release and unpack it into a directory in your PATH (the
 example uses `$HOME/bin`):
 
 NOTE: The version may change as the operator matures. Verify that the version of
-Federation matches the version of `kubefedctl`.
+Kubefed matches the version of `kubefedctl`.
 
 ~~~sh
 curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc3/kubefedctl-0.1.0-rc3-linux-amd64.tgz
@@ -71,6 +67,24 @@ kubefedctl version
 kubefedctl version: version.Info{Version:"v0.1.0-rc3", GitCommit:"d188d227fe3f78f33d74d9a40b3cb701c471cc7e", GitTreeState:"clean", BuildDate:"2019-06-25T00:27:58Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
 
+## Enable the Kubefed Controller Manager
+The Kubefed Controller has to be enabled and deployed for the Kubefed namespace
+management.
+
+From the command line run the following command:
+~~~sh
+cat <<-EOF | oc apply -n federated-mongo -f -
+---
+apiVersion: operator.kubefed.io/v1alpha1
+kind: KubeFed
+metadata:
+  name: kubefed-resource
+spec:
+  scope: Namespaced
+---
+EOF
+~~~
+
 ## Joining Clusters
 Now that the `kubefedctl` binary has been acquired the next step is joining the clusters.
 `kubefedctl` binary utilizes the contexts and clusters within `kubeconfig` when defining the clusters.
@@ -82,41 +96,25 @@ NAME                      DISPLAY            VERSION   REPLACES   PHASE
 kubefed-operator.v0.1.0   Kubefed Operator   0.1.0                Succeeded
 ~~~
 
-## Enable the Kubefed Controller Manager
-The Kubefed Controller has to be enabled for the namespace.
-
-~~~sh
-cat <<-EOF | oc apply -n ${NAMESPACE} -f -
----
-apiVersion: operator.kubefed.io/v1alpha1
-kind: KubeFed
-metadata:
-  name: kubefed-resource
-spec: 
-  scope: Namespaced
----
-EOF
-~~~
-
 The next step is to federate the clusters using `kubefedctl`.
 ~~~sh
-kubefedctl join east1 --host-cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
-kubefedctl join east2 --host-cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
-kubefedctl join west2 --host-cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
+kubefedctl join east1 --cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
+kubefedctl join east2 --cluster-context east2 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
+kubefedctl join west2 --cluster-context west2 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
 
 for type in namespaces deployments.apps ingresses.extensions secrets serviceaccounts services persistentvolumeclaims configmaps
 do
-  kubefedctl enable $type --federation-namespace federated-mongo
+  kubefedctl enable $type --kubefed-namespace federated-mongo
 done
 ~~~
 
-Validate that the clusters are defined as `federatedclusters`.
+Validate that the clusters are defined as `kubefedclusters`.
 ~~~sh
-oc get federatedclusters -n federated-mongo
+oc get kubefedclusters -n federated-mongo
 NAME    READY
-east1   True
-east2   True
-west2   True
+east1   True    20h
+east2   True    20h
+west2   True    20h
 ~~~
 
 ## Creating Certificates
@@ -215,15 +213,22 @@ the [user guide](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/use
 The first step is to clone the demo code to your local machine:
 ~~~sh
 git clone https://github.com/openshift/federation-dev.git
-cd federation-dev/federated-mongodb
+cd federation-dev/federated-mongodb/mongo-yaml
+~~~
+
+Modify the cluster names to reflect the names of the kubefedclusters defined above.
+~~~sh
+sed -i 's/feddemocl1/east1/g' ./*.yaml
+sed -i 's/feddemocl2/east2/g' ./*.yaml
+sed -i 's/feddemocl3/west2/g' ./*.yaml
 ~~~
 
 Before deploying MongoDB the yaml files need to be updated to define the certificates that
-were created as well as the routing endpoints that will be used. Ensure the values of `/tmp/mongo.pem` and `/tmp/ca.pem` reflect the path where the `pem` files were created.
+were created as well as the routing endpoints that will be used. Ensure the values of `mongo.pem` and `ca.pem` reflect the path where the `pem` files were created.
 ~~~sh
 # Define the pem
-sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < ../../mongo.pem)/" 01-mongo-federated-secret.yaml
-sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < ../../ca.pem)/" 01-mongo-federated-secret.yaml
+sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < mongo.pem)/" 01-mongo-federated-secret.yaml
+sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < ca.pem)/" 01-mongo-federated-secret.yaml
 # Configure MongoDB Endpoints for the deployment
 sed -i "s/primarynodehere/${ROUTE_CLUSTER1}:443/" 04-mongo-federated-deployment-rs.yaml
 sed -i "s/replicamembershere/${ROUTE_CLUSTER1}:443,${ROUTE_CLUSTER2}:443,${ROUTE_CLUSTER3}:443/" 04-mongo-federated-deployment-rs.yaml
