@@ -253,7 +253,7 @@ the database.
 ## Moving the Application
 By patching the `federateddeployment` the application can be scheduled and unscheduled between the clusters. The step below remove the *pacman* application from all clusters except for east2. This is done by modifying the `federateddeployment`
 ~~~sh
-oc --context=east2 -n pacman patch federateddeployment pacman --type=merge -p '{"spec":{"overrides":[{"clusterName":"west2","clusterOverrides":[{"path":"spec.replicas","value":0}]},{"clusterName":"east1","clusterOverrides":[{"path":"spec.replicas","value":0}]}]}}'
+oc --context=east2 -n pacman patch federateddeployment pacman --type=merge -p '{"spec":{"overrides":[{"clusterName":"west2","clusterOverrides":[{"path":"/spec/replicas","value":0}]},{"clusterName":"east1","clusterOverrides":[{"path":"/spec/replicas","value":0}]}]}}'
 ~~~
 
 The above command states that there should be 0 replicas in both east1 and west2. To verify
