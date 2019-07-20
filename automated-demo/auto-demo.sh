@@ -446,7 +446,7 @@ mongo_pacman_demo_cleanup()
   echo "Disabling federated resources on Host Cluster (may take a while)"
   for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
   do
-    run_ok_or_fail "./bin/kubefedctl disable "${type}"" "0" "1" "1"
+    run_ok_or_fail "./bin/kubefedctl disable "${type}" --host-cluster-context feddemocl1" "0" "1" "1"
   done
   echo "Deleting Subscription"
   run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system delete subscription federation" "0" "1"
@@ -460,8 +460,10 @@ mongo_pacman_demo_cleanup()
 
 namespace_kubefed_cleanup()
 {
-  echo "Removing namespace ${namespace} from cluster ${cluster}"
-  run_ok_or_fail "oc --context=${cluster} delete federatednamespace ${DEMO_NAMESPACE}" "0" "1"
+  echo "Removing namespace from cluster"
+  run_ok_or_fail "oc --context=feddemocl1 delete namespace kube-federation-system" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl2 delete namespace kube-federation-system" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl3 delete namespace kube-federation-system" "0" "1"
 }
 
 
