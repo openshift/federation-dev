@@ -317,6 +317,7 @@ setup_mongo_tls()
   cp -pf ../yaml-resources/mongo/01-mongo-federated-secret.yaml ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/mongo/04-mongo-federated-deployment-rs.yaml ../yaml-resources/mongo/04-mongo-federated-deployment-rs-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/pacman/03-pacman-federated-ingress.yaml ../yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml &> /dev/null
+  cp -pf ../yaml-resources/pacman/07-pacman-federated-deployment-rs.yaml ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/pacman/07-pacman-federated-deployment-rs.yaml ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml &> /dev/null
   run_ok_or_fail 'sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < mongo.pem)/" ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml' "1" "1"
   run_ok_or_fail 'sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < ca.pem)/" ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml' "1" "1"
@@ -325,6 +326,7 @@ setup_mongo_tls()
   run_ok_or_fail 'sed -i "s/replicamembershere/${ROUTE_CLUSTER1}:443,${ROUTE_CLUSTER2}:443,${ROUTE_CLUSTER3}:443/" ../yaml-resources/mongo/04-mongo-federated-deployment-rs-mod.yaml' "0" "1"
   echo "Crafting Pacman OCP Deployment containing mongodb endpoints"
   run_ok_or_fail 'sed -i "s/pacmanhosthere/${PACMAN_URL}/" ../yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml' "0" "1"
+  run_ok_or_fail 'sed -i "s/namespace: pacman/namespace ${DEMO_NAMESPACE}/" ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/primarymongohere/${ROUTE_CLUSTER1}/" ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/replicamembershere/${ROUTE_CLUSTER1},${ROUTE_CLUSTER2},${ROUTE_CLUSTER3}/" ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml' "0" "1"
   cd .. &> /dev/null
@@ -429,7 +431,6 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedservice pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedserviceaccount pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedclusterrolebinding pacman" "0" "1" "1"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedclusterroles.types.kubefed.k8s.io pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedclusterrole pacman" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedsecret mongodb-users-secret" "0" "1" "1"
   echo "Deleting MongoDB resources"
@@ -464,6 +465,9 @@ namespace_kubefed_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 delete namespace kube-federation-system" "0" "1"
   run_ok_or_fail "oc --context=feddemocl2 delete namespace kube-federation-system" "0" "1"
   run_ok_or_fail "oc --context=feddemocl3 delete namespace kube-federation-system" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 delete namespace ${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl2 delete namespace ${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl3 delete namespace ${DEMO_NAMESPACE}" "0" "1"
 }
 
 
@@ -674,15 +678,16 @@ mongo_pacman_demo()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/05-pacman-federated-cluster-role.yaml" "0" "1"
   echo "13. We need a cluster role to allow for the pacman application to interact with the Kubernetes API."
   wait_for_input
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/06-pacman-federated-cluster-role-binding.yaml" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml" "0" "1"
   echo "14. With the cluster role in place we need to bind the service account with the cluster role."
   wait_for_input
+  echo "15. Now the pacman application is ready to be deployed."
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml" "0" "1"
   wait_for_deployment_ready "feddemocl1" "${DEMO_NAMESPACE}" "pacman"
   wait_for_deployment_ready "feddemocl2" "${DEMO_NAMESPACE}" "pacman"
   wait_for_deployment_ready "feddemocl3" "${DEMO_NAMESPACE}" "pacman"
   run_ok_or_fail 'for cluster in feddemocl1 feddemocl2 feddemocl3;do echo **Cluster ${cluster}**;oc --context=$cluster -n ${DEMO_NAMESPACE} get pods --selector="name=pacman";done' "1" "1"
-  echo "15. Go play Pacman and save some highscores. http://${PACMAN_URL} (Note: Pretend you're bad at Pacman)"
+  echo "16. Go play Pacman and save some highscores. http://${PACMAN_URL} (Note: Pretend you're bad at Pacman)"
   wait_for_input
   if [ $CI_MODE -eq 1 ]
   then
@@ -690,7 +695,7 @@ mongo_pacman_demo()
     sleep 3
     simulate_pacman_play "Joel" "AWS" "us-west-1a" "padman-pod-2" "196" "1"
   fi
-  echo "16. Well, everything should be working fine. Let's create some chaos, what will happen if primary mongo pod gets deleted?"
+  echo "17. Well, everything should be working fine. Let's create some chaos, what will happen if primary mongo pod gets deleted?"
   wait_for_input
   PATCH='{"spec":{"overrides":[{"clusterName":"feddemocl1","clusterOverrides":[{"path":"/spec/replicas","value":0}]}]}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment mongo --type=merge -p '${PATCH}'" "0" "1"
@@ -698,7 +703,7 @@ mongo_pacman_demo()
   PATCH='{"spec":{"placement":{"clusters":[{"name":"feddemocl2"},{"name":"feddemocl3"}]}}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federatedpersistentvolumeclaims mongo --type=merge -p '${PATCH}'" "0" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pods --selector='name=mongo'" "1" "1"
-  echo "17. Let's continue playing and see if we can save highscores. http://${PACMAN_URL}. (Note: Saving the high score could take longer than usual)"
+  echo "18. Let's continue playing and see if we can save highscores. http://${PACMAN_URL}. (Note: Saving the high score could take longer than usual)"
   wait_for_input
   if [ $CI_MODE -eq 1 ]
   then
@@ -706,12 +711,12 @@ mongo_pacman_demo()
     sleep 3
     simulate_pacman_play "Gary" "GCP" "us-west-1b" "padman-pod-2" "149" "1"
   fi
-  echo "18. Well, our Pacman application is not that famous, let's scale it so it only runs on one of our clusters"
+  echo "19. Well, our Pacman application is not that famous, let's scale it so it only runs on one of our clusters"
   PATCH='{"spec":{"overrides":[{"clusterName":"feddemocl1","clusterOverrides":[{"path":"/spec/replicas","value":0}]},{"clusterName":"feddemocl3","clusterOverrides":[{"path":"spec.replicas","value":0}]}]}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment pacman --type=merge -p '${PATCH}'" "0" "1"
   sleep 3
   run_ok_or_fail 'for cluster in feddemocl1 feddemocl2 feddemocl3;do echo **Cluster ${cluster}**;oc --context=$cluster -n ${DEMO_NAMESPACE} get pods --selector="name=pacman";done' "1" "1"
-  echo "19. Our engineers have been working hard during the weekend and the cluster where the primary mongo pod was deployed came back to life"
+  echo "20. Our engineers have been working hard during the weekend and the cluster where the primary mongo pod was deployed came back to life"
   wait_for_input
   PATCH='{"spec":{"placement":{"clusters":[{"name":"feddemocl1"},{"name":"feddemocl2"},{"name":"feddemocl3"}]}}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federatedpersistentvolumeclaims mongo --type=merge -p '${PATCH}'" "0" "1"
@@ -720,7 +725,7 @@ mongo_pacman_demo()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment mongo --type=merge -p '${PATCH}'" "0" "1"
   sleep 3
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pods --selector='name=mongo'" "1" "1"
-  echo "20. Our Pacman application has become trendy among teenagers, they don't want to play Fortnite anymore. We need to scale!!"
+  echo "21. Our Pacman application has become trendy among teenagers, they don't want to play Fortnite anymore. We need to scale!!"
   wait_for_input
   PATCH='{"spec":{"overrides":[]}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment pacman --type=merge -p '${PATCH}'" "0" "1"
@@ -728,7 +733,7 @@ mongo_pacman_demo()
   wait_for_deployment_ready "feddemocl2" "${DEMO_NAMESPACE}" "pacman"
   wait_for_deployment_ready "feddemocl3" "${DEMO_NAMESPACE}" "pacman"
   run_ok_or_fail 'for cluster in feddemocl1 feddemocl2 feddemocl3;do echo **Cluster ${cluster}**;oc --context=$cluster -n ${DEMO_NAMESPACE} get pods --selector="name=pacman";done' "1" "1"
-  echo "21. Bonus track: We should see our MongoDB Replica being restored"
+  echo "22. Bonus track: We should see our MongoDB Replica being restored"
   wait_for_deployment_ready "feddemocl1" "${DEMO_NAMESPACE}" "mongo"
   wait_for_mongodb_replicaset "feddemocl1" "${DEMO_NAMESPACE}" "3"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pods -o name --selector='name=mongo' | xargs oc --context=feddemocl1 -n ${DEMO_NAMESPACE} logs" "1" "1"
