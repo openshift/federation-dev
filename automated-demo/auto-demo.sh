@@ -317,7 +317,7 @@ setup_mongo_tls()
   cp -pf ../yaml-resources/mongo/01-mongo-federated-secret.yaml ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/mongo/04-mongo-federated-deployment-rs.yaml ../yaml-resources/mongo/04-mongo-federated-deployment-rs-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/pacman/03-pacman-federated-ingress.yaml ../yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml &> /dev/null
-  cp -pf ../yaml-resources/pacman/07-pacman-federated-deployment-rs.yaml ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml &> /dev/null
+  cp -pf ../yaml-resources/pacman/06-pacman-federated-deployment-rs.yaml ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/pacman/07-pacman-federated-deployment-rs.yaml ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml &> /dev/null
   run_ok_or_fail 'sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < mongo.pem)/" ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml' "1" "1"
   run_ok_or_fail 'sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < ca.pem)/" ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml' "1" "1"
