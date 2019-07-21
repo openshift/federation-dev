@@ -445,7 +445,7 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl2 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl3 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
-  run_ok_or_fail "oc --context=feddemocl1 delete federatednamespace ${DEMO_NAMESPACE}" "0" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 delete federatednamespace ${DEMO_NAMESPACE} -n ${DEMO_NAMESPACE}" "0" "1" "1"
   echo "Deleting Federation"
   echo "Disabling federated resources on Host Cluster (may take a while)"
   for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
@@ -894,6 +894,6 @@ done
 STEPS=${STEPS:="all"}
 MODE=${MODE:="demo"}
 CI_MODE=${CI_MODE:="0"}
-DEMO_NAMESPACE=${DEMO_NAMESPACE:="federation-demo"}
+DEMO_NAMESPACE=${DEMO_NAMESPACE:="federation-demo1"}
 
 main
