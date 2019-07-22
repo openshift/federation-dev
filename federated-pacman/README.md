@@ -14,6 +14,7 @@ A new project of *kube-federation-system* needs to be created from the command l
 with the kubefed components as it is the default namespace when using cluster scoped Kubefed.
 
 ~~~sh
+oc config use-context east2
 oc create ns kube-federation-system
 ~~~
 
@@ -106,7 +107,7 @@ kubefed-operator.v0.1.0   Kubefed Operator   0.1.0                Succeeded
 
 Ensure that the kubefed-controller-manager is in the ready state.
 ~~~sh
-$ oc get deployment -n federated-mongo
+$ oc get deployment -n kube-federation-system
 NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
 kubefed-controller-manager   2/2     2            2           48s
 kubefed-operator             1/1     1            1           83s
