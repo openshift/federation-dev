@@ -104,6 +104,14 @@ NAME                      DISPLAY            VERSION   REPLACES   PHASE
 kubefed-operator.v0.1.0   Kubefed Operator   0.1.0                Succeeded
 ~~~
 
+Ensure that the kubefed-controller-manager is in the ready state.
+~~~sh
+$ oc get deployment -n federated-mongo
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+kubefed-controller-manager   2/2     2            2           48s
+kubefed-operator             1/1     1            1           83s
+~~~
+
 The next step is to federate the clusters using `kubefedctl`.
 ~~~sh
 kubefedctl join east1 --cluster-context east1 --host-cluster-context east2 --v=2
