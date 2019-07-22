@@ -1,37 +1,35 @@
 # Federated MongoDB
-The files within this directory are used with the Federation operator to show
+The files within this directory are used with the Kubefed Operator to show
 MongoDB running on multiple OpenShift clusters. An accompanying video
-is [here](https://youtu.be/StNJupmZ5Mo). This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
+is [here](https://youtu.be/avCPAJms3Fc) showing the 0.0.8 version of Kubefed. This demonstration uses 3 OpenShift 4 clusters. It is assumed that 3 OpenShift
 clusters have already been deployed using of the deployment mechanisms defined at
 https://cloud.openshift.com.
 
 ## Creating a Namespace and Deploying the Operator
-The first step is to decide which of the clusters will run the Federation Operator.
-Only one cluster runs the federation-controller-manager.
+The first step is to decide which of the clusters will run the Kubefed Operator.
+Only one cluster runs the kubefed-controller-manager.
 
-A new project of *federated-mongo* is created within the OpenShift UI on cluster east1. Once the project is created the next step is to deploy the operator.
+NOTE: Problems can exist if using cluster and namespace scoped on the same cluster.
+
+A new project of *federated-mongo* needs to be created within the OpenShift UI on cluster east1. Once the project is created the next step is to deploy the operator.
 
 Select OperatorHub</br>
 ![OperatorHub](../images/mongooperator.png)
 
 
-Once the OperatorHub loads click Federation </br>
-![Federation](../images/federation.png)
+Once the OperatorHub loads click KubeFed Operator </br>
+![Federation](../images/kubefed.png)
 
-Once Federation has been chosen, information about the Operator will appear. It is
+Once the Kubefed Operator has been chosen, information about the Operator will appear. It is
 important to take note of the Operator Version as this will be needed when deciding
 which version of Kubefedctl to use.
 
 Select Install</br>
 ![Install Federation](../images/install.png)
 
-Subscribe to the Federation Operator in the *federated-mongo* namespace by clicking the
+Choose the Installation Mode of "A specific namespace on the cluster" and subscribe to the Federation Operator in the *federated-mongo* namespace by clicking the
 *Subscribe* button.
-![Subscribe Federation](../images/subsribe.png)
-
-Back at the command line run the following command looking for the status of Succeeded
-
-NOTE: This may take a few minutes
+![Subscribe Federation](../images/subscribe.png)
 
 ## Kubeconfig
 Specific items are required to be configured within the `kubeconfig` file before
@@ -52,23 +50,41 @@ oc config set-context east1
 ## Install the kubefedctl binary
 
 The `kubefedctl` tool manages federated cluster registration. Download the
-v0.0.10 release and unpack it into a directory in your PATH (the
+v0.0.1.0-rc4 release and unpack it into a directory in your PATH (the
 example uses `$HOME/bin`):
 
 NOTE: The version may change as the operator matures. Verify that the version of
-Federation matches the version of `kubefedctl`.
+Kubefed matches the version of `kubefedctl`.
 
 ~~~sh
-curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.0.10/kubefedctl.tgz
-tar xzf kubefedctl.tgz -C ~/bin
-rm -f kubefedctl.tgz
+curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc4/kubefedctl-0.1.0-rc4-linux-amd64.tgz
+tar xzf kubefedctl-0.1.0-rc4-linux-amd64.tgz -C ~/bin
+rm -f kubefedctl-0.1.0-rc4-linux-amd64.tgz
 ~~~
 
 Verify that `kubefedctl` is working:
 ~~~sh
 kubefedctl version
 
-kubefedctl version: version.Info{Version:"v0.0.10-dirty", GitCommit:"71d233ede685707df554ef653e06bf7f0229415c", GitTreeState:"dirty", BuildDate:"2019-05-06T22:30:31Z", GoVersion:"go1.11.2", Compiler:"gc", Platform:"linux/amd64"}
+kubefedctl version: version.Info{Version:"v0.1.0-rc4", GitCommit:"d188d227fe3f78f33d74d9a40b3cb701c471cc7e", GitTreeState:"clean", BuildDate:"2019-06-25T00:27:58Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
+~~~
+
+## Enable the Kubefed Controller Manager
+The Kubefed Controller has to be enabled and deployed for the Kubefed namespace
+management.
+
+From the command line run the following command:
+~~~sh
+cat <<-EOF | oc apply -n federated-mongo -f -
+---
+apiVersion: operator.kubefed.io/v1alpha1
+kind: KubeFed
+metadata:
+  name: kubefed-resource
+spec:
+  scope: Namespaced
+---
+EOF
 ~~~
 
 ## Joining Clusters
@@ -78,28 +94,40 @@ Now that the `kubefedctl` binary has been acquired the next step is joining the 
 Using the `kubeconfig` file that was generated, verify the Operator has been successfully deployed.
 ~~~sh
 $ oc get csv -n federated-mongo
-NAME                DISPLAY      VERSION   REPLACES   PHASE
-federation.v0.0.10   Federation   0.0.10                Succeeded
+NAME                      DISPLAY            VERSION   REPLACES   PHASE
+kubefed-operator.v0.1.0   Kubefed Operator   0.1.0                Succeeded
 ~~~
+
+Ensure that the kubefed-controller-manager is in the ready state.
+~~~sh
+$ oc get deployment -n federated-mongo
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+kubefed-controller-manager   2/2     2            2           48s
+kubefed-operator             1/1     1            1           83s
+~~~
+
 The next step is to federate the clusters using `kubefedctl`.
 ~~~sh
-kubefedctl join east1 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
-kubefedctl join east2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
-kubefedctl join west2 --host-cluster-context east1 --add-to-registry --v=2 --federation-namespace=federated-mongo
-
-for type in namespaces deployments.apps ingresses.extensions secrets serviceaccounts services persistentvolumeclaims configmaps
-do
-  kubefedctl enable $type --federation-namespace federated-mongo
-done
+kubefedctl join east1 --cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
+kubefedctl join east2 --cluster-context east2 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
+kubefedctl join west2 --cluster-context west2 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
 ~~~
 
-Validate that the clusters are defined as `federatedclusters`.
+Validate that the clusters are defined as `kubefedclusters`.
 ~~~sh
-oc get federatedclusters -n federated-mongo
+oc get kubefedclusters -n federated-mongo
 NAME    READY
-east1   True
-east2   True
-west2   True
+east1   True    20h
+east2   True    20h
+west2   True    20h
+~~~
+
+Enable federating of objects.
+~~~sh
+for type in namespaces deployments.apps ingresses.extensions secrets serviceaccounts services persistentvolumeclaims configmaps
+do
+  kubefedctl enable $type --kubefed-namespace federated-mongo
+done
 ~~~
 
 ## Creating Certificates
@@ -198,15 +226,22 @@ the [user guide](https://github.com/kubernetes-sigs/kubefed/blob/master/docs/use
 The first step is to clone the demo code to your local machine:
 ~~~sh
 git clone https://github.com/openshift/federation-dev.git
-cd federation-dev/federated-mongodb
+cd federation-dev/federated-mongodb/mongo-yaml
+~~~
+
+Modify the cluster names to reflect the names of the kubefedclusters defined above.
+~~~sh
+sed -i 's/feddemocl1/east1/g' ./*.yaml
+sed -i 's/feddemocl2/east2/g' ./*.yaml
+sed -i 's/feddemocl3/west2/g' ./*.yaml
 ~~~
 
 Before deploying MongoDB the yaml files need to be updated to define the certificates that
-were created as well as the routing endpoints that will be used. Ensure the values of `/tmp/mongo.pem` and `/tmp/ca.pem` reflect the path where the `pem` files were created.
+were created as well as the routing endpoints that will be used. Ensure the values of `mongo.pem` and `ca.pem` reflect the path where the `pem` files were created.
 ~~~sh
 # Define the pem
-sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < ../../mongo.pem)/" 01-mongo-federated-secret.yaml
-sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < ../../ca.pem)/" 01-mongo-federated-secret.yaml
+sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < mongo.pem)/" 01-mongo-federated-secret.yaml
+sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < ca.pem)/" 01-mongo-federated-secret.yaml
 # Configure MongoDB Endpoints for the deployment
 sed -i "s/primarynodehere/${ROUTE_CLUSTER1}:443/" 04-mongo-federated-deployment-rs.yaml
 sed -i "s/replicamembershere/${ROUTE_CLUSTER1}:443,${ROUTE_CLUSTER2}:443,${ROUTE_CLUSTER3}:443/" 04-mongo-federated-deployment-rs.yaml

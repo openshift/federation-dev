@@ -1,0 +1,24 @@
+---
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedClusterRoleBinding
+metadata:
+  name: pacman
+spec:
+  placement:
+    clusters:
+    - name: feddemocl1
+    - name: feddemocl2
+    - name: feddemocl3
+  template:
+    metadata:
+      labels:
+        name: pacman
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: pacman
+    subjects:
+    - kind: ServiceAccount
+      name: pacman
+      namespace: pacman
+

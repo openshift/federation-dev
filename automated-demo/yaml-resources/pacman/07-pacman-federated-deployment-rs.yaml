@@ -19,6 +19,8 @@ spec:
           labels:
             name: pacman
         spec:
+          serviceAccount: pacman
+          imagePullPolicy: Always
           containers:
           - image: quay.io/ifont/pacman-nodejs-app:latest
             name: pacman
@@ -49,6 +51,10 @@ spec:
               value: "true"
             - name: MONGO_VALIDATE_SSL
               value: "false"
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             ports:
             - containerPort: 8080
               name: http-server
