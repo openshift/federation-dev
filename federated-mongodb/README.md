@@ -7,7 +7,7 @@ https://cloud.openshift.com.
 
 ## Creating a Namespace and Deploying the Operator
 The first step is to decide which of the clusters will run the Kubefed Operator.
-Only one cluster runs the federation-controller-manager.
+Only one cluster runs the kubefed-controller-manager.
 
 NOTE: Problems can exist if using cluster and namespace scoped on the same cluster.
 
@@ -103,11 +103,6 @@ The next step is to federate the clusters using `kubefedctl`.
 kubefedctl join east1 --cluster-context east1 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
 kubefedctl join east2 --cluster-context east2 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
 kubefedctl join west2 --cluster-context west2 --host-cluster-context east1 --v=2 --kubefed-namespace=federated-mongo
-
-for type in namespaces deployments.apps ingresses.extensions secrets serviceaccounts services persistentvolumeclaims configmaps
-do
-  kubefedctl enable $type --kubefed-namespace federated-mongo
-done
 ~~~
 
 Validate that the clusters are defined as `kubefedclusters`.
@@ -117,6 +112,14 @@ NAME    READY
 east1   True    20h
 east2   True    20h
 west2   True    20h
+~~~
+
+Enable federating of objects.
+~~~sh
+for type in namespaces deployments.apps ingresses.extensions secrets serviceaccounts services persistentvolumeclaims configmaps
+do
+  kubefedctl enable $type --kubefed-namespace federated-mongo
+done
 ~~~
 
 ## Creating Certificates

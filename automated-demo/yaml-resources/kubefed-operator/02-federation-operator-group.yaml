@@ -2,7 +2,7 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: federation
-  namespace: kube-federation-system
+  namespace: changemeNS
 spec:
   targetNamespaces:
-  - kube-federation-system
+  - changemeNS

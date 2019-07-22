@@ -22,7 +22,7 @@ spec:
           serviceAccount: pacman
           imagePullPolicy: Always
           containers:
-          - image: quay.io/rcook/pacman-nodejs-app:latest
+          - image: quay.io/ifont/pacman-nodejs-app:latest
             name: pacman
             env:
             - name: MONGO_SERVICE_HOST

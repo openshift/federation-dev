@@ -109,11 +109,6 @@ The next step is to federate the clusters using `kubefedctl`.
 kubefedctl join east1 --cluster-context east1 --host-cluster-context east2 --v=2
 kubefedctl join east2 --cluster-context east2 --host-cluster-context east2 --v=2
 kubefedctl join west2 --cluster-context west2 --host-cluster-context east2 --v=2
-
-for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
-do
-  kubefedctl enable $type
-done
 ~~~
 
 Validate that the clusters are defined as `kubefedclusters`.
@@ -123,6 +118,14 @@ NAME    READY
 east1   True    20h
 east2   True    20h
 west2   True    20h
+~~~
+
+Enable the federating of specific objects.
+~~~sp
+for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
+do
+  kubefedctl enable $type
+done
 ~~~
 
 ## Deploying *Pacman*
@@ -148,7 +151,7 @@ sed -i 's/feddemocl3/west2/g' ./*.yaml
 
 The pacman namespace must be created and then defined as a federated namespace.
 ~~~sh
-oc new-project pacman
+oc create ns pacman
 kubefedctl federate namespace pacman
 ~~~
 

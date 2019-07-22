@@ -3,6 +3,7 @@
 # GLOBAL VAR
 KUBEFED_RELEASE="v0.1.0-rc4"
 CSV_RELEASE="v0.1.0"
+KUBEFED_NAMESPACE="kube-federation-system"
 
 usage()
 {
@@ -199,11 +200,11 @@ check_federated_clusters_ready()
   WAIT=0
   MAX_WAIT=300
   echo "Checking if Federated Clusters are ready"
-  FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n kube-federation-system | grep -c ClusterReady)
+  FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n ${KUBEFED_NAMESPACE} | grep -c ClusterReady)
   DESIRED_READY_CLUSTERS=3
   while [ $READY -eq 0 ]
   do
-    FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n kube-federation-system | grep -c ClusterReady)
+    FEDERATED_CLUSTERS_STATE_READY=$(oc --context=feddemocl1 describe kubefedclusters -n ${KUBEFED_NAMESPACE} | grep -c ClusterReady)
     if [ "0$FEDERATED_CLUSTERS_STATE_READY" -eq "0$DESIRED_READY_CLUSTERS" ]
     then
       echo "Federated Clusters are ready"
@@ -244,7 +245,7 @@ setup_kubefed()
 {
   download_kubefed_binary
   echo "Creating namespace ${DEMO_NAMESPACE} for deploying the demo"
-  run_ok_or_fail "oc --context=feddemocl1 create ns kube-federation-system" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 create ns ${KUBEFED_NAMESPACE}" "0" "1"
   run_ok_or_fail "oc --context=feddemocl1 create ns ${DEMO_NAMESPACE}" "0" "1"
   echo "Deploying Federation Operator on Host Cluster in namespace ${DEMO_NAMESPACE}"
   # Here detect if feddemocl1 is 3.11 or 4.X
@@ -256,26 +257,30 @@ setup_kubefed()
     cp -pf yaml-resources/olm/01-olm.yaml yaml-resources/olm/01-olm-mod.yaml &> /dev/null
     cp -pf yaml-resources/olm/02-olm.yaml yaml-resources/olm/02-olm-mod.yaml &> /dev/null
     cp -pf yaml-resources/olm/03-subscription.yaml yaml-resources/olm/03-subscription-mod.yaml &> /dev/null
+    run_ok_or_fail 'sed -i "s/changemeNS/${KUBEFED_NAMESPACE}/g" yaml-resources/olm/03-subscription-mod.yaml' "1" "1"
     run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/01-olm-mod.yaml" "0" "1"
     run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/02-olm-mod.yaml" "0" "1"
     wait_for_deployment_ready "feddemocl1" "olm" "olm-operator"
     wait_for_deployment_ready "feddemocl1" "olm" "catalog-operator"
     echo "Configuring CatalogSourceConfig and Subscription with demo data"
-    run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system create -f yaml-resources/olm/03-subscription-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} create -f yaml-resources/olm/03-subscription-mod.yaml" "0" "1"
   else
     echo "Configuring CatalogSourceConfig and Subscription with demo data"
     cp -pf yaml-resources/kubefed-operator/01-catalog-source-config.yaml yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml &> /dev/null
     cp -pf yaml-resources/kubefed-operator/02-federation-operator-group.yaml yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml &> /dev/null
     cp -pf yaml-resources/kubefed-operator/03-federation-subscription.yaml yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml &> /dev/null
+    run_ok_or_fail 'sed -i "s/changemeNS/${KUBEFED_NAMESPACE}/g" yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml' "1" "1"
+    run_ok_or_fail 'sed -i "s/changemeNS/${KUBEFED_NAMESPACE}/g" yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml' "1" "1"
+    run_ok_or_fail 'sed -i "s/changemeNS/${KUBEFED_NAMESPACE}/g" yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml' "1" "1"
     run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace create -f yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml" "0" "1"
-    run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system create -f yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml" "0" "1"
-    run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system create -f yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} create -f yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} create -f yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml" "0" "1"
   fi
-  wait_for_csv_completed "feddemocl1" "kube-federation-system" "kubefed-operator.${CSV_RELEASE}"
-  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system create -f yaml-resources/kubefed-operator/04-kubefed-resource.yaml"
-  wait_for_deployment_ready "feddemocl1" "kube-federation-system" "kubefed-controller-manager"
+  wait_for_csv_completed "feddemocl1" "${KUBEFED_NAMESPACE}" "kubefed-operator.${CSV_RELEASE}"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} create -f yaml-resources/kubefed-operator/04-kubefed-resource.yaml"
+  wait_for_deployment_ready "feddemocl1" "${KUBEFED_NAMESPACE}" "kubefed-controller-manager"
   echo "Enabling federated resources on Host Cluster (may take a while)"
-  for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
+  for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
   do
     run_ok_or_fail "./bin/kubefedctl enable "${type}" --host-cluster-context feddemocl1" "0" "1"
   done
@@ -286,7 +291,7 @@ setup_kubefed()
   echo "Joining Cluster3 to ClusterRegistry"
   run_ok_or_fail "./bin/kubefedctl join feddemocl3 --host-cluster-context feddemocl1 --v=2" "0" "1"
   check_federated_clusters_ready
-  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system get kubefedclusters" "1" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} get kubefedclusters" "1" "1"
   run_ok_or_fail "kubefedctl federate namespace ${DEMO_NAMESPACE} --host-cluster-context feddemocl1" "1" "1"
   echo "feddemocl1 - ${CLUSTER1_URL}"
   echo "feddemocl2 - ${CLUSTER2_URL}"
@@ -326,8 +331,8 @@ setup_mongo_tls()
   run_ok_or_fail 'sed -i "s/replicamembershere/${ROUTE_CLUSTER1}:443,${ROUTE_CLUSTER2}:443,${ROUTE_CLUSTER3}:443/" ../yaml-resources/mongo/04-mongo-federated-deployment-rs-mod.yaml' "0" "1"
   echo "Crafting Pacman OCP Deployment containing mongodb endpoints"
   run_ok_or_fail 'sed -i "s/pacmanhosthere/${PACMAN_URL}/" ../yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml' "0" "1"
-  run_ok_or_fail 'sed -i "s/namespace: pacman/namespace: ${DEMO_NAMESPACE}/" ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/primarymongohere/${ROUTE_CLUSTER1}/" ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml' "0" "1"
+  run_ok_or_fail 'sed -i "s/namespace: pacman/namespace: ${DEMO_NAMESPACE}/" ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/replicamembershere/${ROUTE_CLUSTER1},${ROUTE_CLUSTER2},${ROUTE_CLUSTER3}/" ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml' "0" "1"
   cd .. &> /dev/null
 }
@@ -446,29 +451,26 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 delete federatednamespace ${DEMO_NAMESPACE} -n ${DEMO_NAMESPACE}" "0" "1" "1"
   echo "Deleting Federation"
   echo "Disabling federated resources on Host Cluster (may take a while)"
-  for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps roles.rbac.authorization.k8s.io rolebindings.rbac.authorization.k8s.io clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
+  for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
   do
     run_ok_or_fail "./bin/kubefedctl disable "${type}" --host-cluster-context feddemocl1" "0" "1" "1"
   done
   echo "Deleting Subscription"
-  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system delete subscription federation" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete subscription federation" "0" "1"
   echo "Deleting ClusterServiceVersion"
-  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system delete csv kubefed-operator.${CSV_RELEASE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete csv kubefed-operator.${CSV_RELEASE}" "0" "1"
   echo "Deleting CatalogSourceConfig"
-  run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace delete catalogsourceconfig installed-federation-kube-federation-system" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace delete catalogsourceconfig installed-federation-${KUBEFED_NAMESPACE}" "0" "1"
   echo "Deleting OperatorGroup"
-  run_ok_or_fail "oc --context=feddemocl1 -n kube-federation-system delete operatorgroup federation" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete operatorgroup federation" "0" "1"
 }
 
 namespace_kubefed_cleanup()
 {
   echo "Removing namespace from cluster"
-  run_ok_or_fail "oc --context=feddemocl1 delete namespace kube-federation-system" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl2 delete namespace kube-federation-system" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl3 delete namespace kube-federation-system" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl1 delete namespace ${DEMO_NAMESPACE}" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl2 delete namespace ${DEMO_NAMESPACE}" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl3 delete namespace ${DEMO_NAMESPACE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl2 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl3 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
 }
 
 
@@ -671,24 +673,23 @@ mongo_pacman_demo()
   echo "10. We need a route for our Pacman application, let's create a FederatedIngress that points to our LoadBalancer"
   wait_for_input
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml" "0" "1"
-  echo "11. We need a route for our Pacman application, let's create a FederatedIngress that points to our LoadBalancer"
+  echo "11. A service account is created to be used with the deployment of the pacman application."
   wait_for_input
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/04-pacman-federated-service-account.yaml" "0" "1"
-  echo "12. A service account is created to be used with the deployment of the pacman application."
+  echo "12. We need a cluster role to allow for the pacman application to interact with the Kubernetes API."
   wait_for_input
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/05-pacman-federated-cluster-role.yaml" "0" "1"
-  echo "13. We need a cluster role to allow for the pacman application to interact with the Kubernetes API."
+  echo "13. With the cluster role in place we need to bind the service account with the cluster role."
   wait_for_input
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml" "0" "1"
-  echo "14. With the cluster role in place we need to bind the service account with the cluster role."
+  echo "14. Now the pacman application is ready to be deployed."
   wait_for_input
-  echo "15. Now the pacman application is ready to be deployed."
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml" "0" "1"
   wait_for_deployment_ready "feddemocl1" "${DEMO_NAMESPACE}" "pacman"
   wait_for_deployment_ready "feddemocl2" "${DEMO_NAMESPACE}" "pacman"
   wait_for_deployment_ready "feddemocl3" "${DEMO_NAMESPACE}" "pacman"
   run_ok_or_fail 'for cluster in feddemocl1 feddemocl2 feddemocl3;do echo **Cluster ${cluster}**;oc --context=$cluster -n ${DEMO_NAMESPACE} get pods --selector="name=pacman";done' "1" "1"
-  echo "16. Go play Pacman and save some highscores. http://${PACMAN_URL} (Note: Pretend you're bad at Pacman)"
+  echo "15. Go play Pacman and save some highscores. http://${PACMAN_URL} (Note: Pretend you're bad at Pacman)"
   wait_for_input
   if [ $CI_MODE -eq 1 ]
   then
@@ -696,7 +697,7 @@ mongo_pacman_demo()
     sleep 3
     simulate_pacman_play "Joel" "AWS" "us-west-1a" "padman-pod-2" "196" "1"
   fi
-  echo "17. Well, everything should be working fine. Let's create some chaos, what will happen if primary mongo pod gets deleted?"
+  echo "16. Well, everything should be working fine. Let's create some chaos, what will happen if primary mongo pod gets deleted?"
   wait_for_input
   PATCH='{"spec":{"overrides":[{"clusterName":"feddemocl1","clusterOverrides":[{"path":"/spec/replicas","value":0}]}]}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment mongo --type=merge -p '${PATCH}'" "0" "1"
@@ -704,7 +705,7 @@ mongo_pacman_demo()
   PATCH='{"spec":{"placement":{"clusters":[{"name":"feddemocl2"},{"name":"feddemocl3"}]}}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federatedpersistentvolumeclaims mongo --type=merge -p '${PATCH}'" "0" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pods --selector='name=mongo'" "1" "1"
-  echo "18. Let's continue playing and see if we can save highscores. http://${PACMAN_URL}. (Note: Saving the high score could take longer than usual)"
+  echo "17. Let's continue playing and see if we can save highscores. http://${PACMAN_URL}. (Note: Saving the high score could take longer than usual)"
   wait_for_input
   if [ $CI_MODE -eq 1 ]
   then
@@ -712,12 +713,12 @@ mongo_pacman_demo()
     sleep 3
     simulate_pacman_play "Gary" "GCP" "us-west-1b" "padman-pod-2" "149" "1"
   fi
-  echo "19. Well, our Pacman application is not that famous, let's scale it so it only runs on one of our clusters"
+  echo "18. Well, our Pacman application is not that famous, let's scale it so it only runs on one of our clusters"
   PATCH='{"spec":{"overrides":[{"clusterName":"feddemocl1","clusterOverrides":[{"path":"/spec/replicas","value":0}]},{"clusterName":"feddemocl3","clusterOverrides":[{"path":"spec.replicas","value":0}]}]}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment pacman --type=merge -p '${PATCH}'" "0" "1"
   sleep 3
   run_ok_or_fail 'for cluster in feddemocl1 feddemocl2 feddemocl3;do echo **Cluster ${cluster}**;oc --context=$cluster -n ${DEMO_NAMESPACE} get pods --selector="name=pacman";done' "1" "1"
-  echo "20. Our engineers have been working hard during the weekend and the cluster where the primary mongo pod was deployed came back to life"
+  echo "19. Our engineers have been working hard during the weekend and the cluster where the primary mongo pod was deployed came back to life"
   wait_for_input
   PATCH='{"spec":{"placement":{"clusters":[{"name":"feddemocl1"},{"name":"feddemocl2"},{"name":"feddemocl3"}]}}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federatedpersistentvolumeclaims mongo --type=merge -p '${PATCH}'" "0" "1"
@@ -726,7 +727,7 @@ mongo_pacman_demo()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment mongo --type=merge -p '${PATCH}'" "0" "1"
   sleep 3
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pods --selector='name=mongo'" "1" "1"
-  echo "21. Our Pacman application has become trendy among teenagers, they don't want to play Fortnite anymore. We need to scale!!"
+  echo "20. Our Pacman application has become trendy among teenagers, they don't want to play Fortnite anymore. We need to scale!!"
   wait_for_input
   PATCH='{"spec":{"overrides":[]}}'
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} patch federateddeployment pacman --type=merge -p '${PATCH}'" "0" "1"
@@ -734,7 +735,7 @@ mongo_pacman_demo()
   wait_for_deployment_ready "feddemocl2" "${DEMO_NAMESPACE}" "pacman"
   wait_for_deployment_ready "feddemocl3" "${DEMO_NAMESPACE}" "pacman"
   run_ok_or_fail 'for cluster in feddemocl1 feddemocl2 feddemocl3;do echo **Cluster ${cluster}**;oc --context=$cluster -n ${DEMO_NAMESPACE} get pods --selector="name=pacman";done' "1" "1"
-  echo "22. Bonus track: We should see our MongoDB Replica being restored"
+  echo "21. Bonus track: We should see our MongoDB Replica being restored"
   wait_for_deployment_ready "feddemocl1" "${DEMO_NAMESPACE}" "mongo"
   wait_for_mongodb_replicaset "feddemocl1" "${DEMO_NAMESPACE}" "3"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pods -o name --selector='name=mongo' | xargs oc --context=feddemocl1 -n ${DEMO_NAMESPACE} logs" "1" "1"
