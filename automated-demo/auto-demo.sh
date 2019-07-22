@@ -471,6 +471,7 @@ namespace_kubefed_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
   run_ok_or_fail "oc --context=feddemocl2 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
   run_ok_or_fail "oc --context=feddemocl3 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 delete namespace ${DEMO_NAMESPACE}" "0" "1"
 }
 
 
