@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # GLOBAL VAR
-KUBEFED_RELEASE="v0.1.0-rc3"
+KUBEFED_RELEASE="v0.1.0-rc4"
 CSV_RELEASE="v0.1.0"
 
 usage()
@@ -317,7 +317,7 @@ setup_mongo_tls()
   cp -pf ../yaml-resources/mongo/01-mongo-federated-secret.yaml ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/mongo/04-mongo-federated-deployment-rs.yaml ../yaml-resources/mongo/04-mongo-federated-deployment-rs-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/pacman/03-pacman-federated-ingress.yaml ../yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml &> /dev/null
-  cp -pf ../yaml-resources/pacman/06-pacman-federated-deployment-rs.yaml ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml &> /dev/null
+  cp -pf ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding.yaml ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml &> /dev/null
   cp -pf ../yaml-resources/pacman/07-pacman-federated-deployment-rs.yaml ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml &> /dev/null
   run_ok_or_fail 'sed -i "s/mongodb.pem: .*$/mongodb.pem: $(openssl base64 -A < mongo.pem)/" ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml' "1" "1"
   run_ok_or_fail 'sed -i "s/ca.pem: .*$/ca.pem: $(openssl base64 -A < ca.pem)/" ../yaml-resources/mongo/01-mongo-federated-secret-mod.yaml' "1" "1"
@@ -326,7 +326,7 @@ setup_mongo_tls()
   run_ok_or_fail 'sed -i "s/replicamembershere/${ROUTE_CLUSTER1}:443,${ROUTE_CLUSTER2}:443,${ROUTE_CLUSTER3}:443/" ../yaml-resources/mongo/04-mongo-federated-deployment-rs-mod.yaml' "0" "1"
   echo "Crafting Pacman OCP Deployment containing mongodb endpoints"
   run_ok_or_fail 'sed -i "s/pacmanhosthere/${PACMAN_URL}/" ../yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml' "0" "1"
-  run_ok_or_fail 'sed -i "s/namespace: pacman/namespace ${DEMO_NAMESPACE}/" ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml' "0" "1"
+  run_ok_or_fail 'sed -i "s/namespace: pacman/namespace: ${DEMO_NAMESPACE}/" ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/primarymongohere/${ROUTE_CLUSTER1}/" ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/replicamembershere/${ROUTE_CLUSTER1},${ROUTE_CLUSTER2},${ROUTE_CLUSTER3}/" ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml' "0" "1"
   cd .. &> /dev/null
@@ -443,8 +443,6 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedsecret mongodb-secret" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedsecret mongodb-ssl" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
-  run_ok_or_fail "oc --context=feddemocl2 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
-  run_ok_or_fail "oc --context=feddemocl3 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 delete federatednamespace ${DEMO_NAMESPACE} -n ${DEMO_NAMESPACE}" "0" "1" "1"
   echo "Deleting Federation"
   echo "Disabling federated resources on Host Cluster (may take a while)"
@@ -894,6 +892,6 @@ done
 STEPS=${STEPS:="all"}
 MODE=${MODE:="demo"}
 CI_MODE=${CI_MODE:="0"}
-DEMO_NAMESPACE=${DEMO_NAMESPACE:="federation-demo1"}
+DEMO_NAMESPACE=${DEMO_NAMESPACE:="federation-demo"}
 
 main

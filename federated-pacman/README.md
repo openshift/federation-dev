@@ -56,23 +56,23 @@ oc config set-context east1
 ## Install the `kubefedctl` binary
 
 The `kubefedctl` tool manages federated cluster registration. Download the
-v0.0.1.0-rc3 release and unpack it into a directory in your PATH (the
+v0.0.1.0-rc4 release and unpack it into a directory in your PATH (the
 example uses `$HOME/bin`):
 
 NOTE: The version may change as the operator matures. Verify that the version of
 Kubefed matches the version of `kubefedctl`.
 
 ~~~sh
-curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc3/kubefedctl-0.1.0-rc3-linux-amd64.tgz
-tar xzf kubefedctl-0.1.0-rc3-linux-amd64.tgz -C ~/bin
-rm -f kubefedctl-0.1.0-rc3-linux-amd64.tgz
+curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc4/kubefedctl-0.1.0-rc4-linux-amd64.tgz
+tar xzf kubefedctl-0.1.0-rc4-linux-amd64.tgz -C ~/bin
+rm -f kubefedctl-0.1.0-rc4-linux-amd64.tgz
 ~~~
 
 Verify that `kubefedctl` is working:
 ~~~sh
 kubefedctl version
 
-kubefedctl version: version.Info{Version:"v0.1.0-rc3", GitCommit:"d188d227fe3f78f33d74d9a40b3cb701c471cc7e", GitTreeState:"clean", BuildDate:"2019-06-25T00:27:58Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
+kubefedctl version: version.Info{Version:"v0.1.0-rc4", GitCommit:"d188d227fe3f78f33d74d9a40b3cb701c471cc7e", GitTreeState:"clean", BuildDate:"2019-06-25T00:27:58Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
 
 ## Enable the Kubefed Controller Manager
@@ -99,9 +99,9 @@ Now that the `kubefedctl` binary has been acquired the next step is joining the 
 
 Using the `kubeconfig` file that was generated, verify the Operator has been successfully deployed.
 ~~~sh
-$ oc get csv -n pacman
-NAME                DISPLAY      VERSION   REPLACES   PHASE
-federation.v0.0.10   Federation   0.0.10                Succeeded
+$ oc get csv -n kube-federation-system
+NAME                      DISPLAY            VERSION   REPLACES   PHASE
+kubefed-operator.v0.1.0   Kubefed Operator   0.1.0                Succeeded
 ~~~
 
 The next step is to federate the clusters using `kubefedctl`.

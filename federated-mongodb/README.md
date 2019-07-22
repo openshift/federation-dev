@@ -7,7 +7,9 @@ https://cloud.openshift.com.
 
 ## Creating a Namespace and Deploying the Operator
 The first step is to decide which of the clusters will run the Kubefed Operator.
-Only one cluster runs the federation-controller-manager. IT
+Only one cluster runs the federation-controller-manager.
+
+NOTE: Problems can exist if using cluster and namespace scoped on the same cluster.
 
 A new project of *federated-mongo* needs to be created within the OpenShift UI on cluster east1. Once the project is created the next step is to deploy the operator.
 
@@ -48,23 +50,23 @@ oc config set-context east1
 ## Install the kubefedctl binary
 
 The `kubefedctl` tool manages federated cluster registration. Download the
-v0.0.1.0-rc3 release and unpack it into a directory in your PATH (the
+v0.0.1.0-rc4 release and unpack it into a directory in your PATH (the
 example uses `$HOME/bin`):
 
 NOTE: The version may change as the operator matures. Verify that the version of
 Kubefed matches the version of `kubefedctl`.
 
 ~~~sh
-curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc3/kubefedctl-0.1.0-rc3-linux-amd64.tgz
-tar xzf kubefedctl-0.1.0-rc3-linux-amd64.tgz -C ~/bin
-rm -f kubefedctl-0.1.0-rc3-linux-amd64.tgz
+curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc4/kubefedctl-0.1.0-rc4-linux-amd64.tgz
+tar xzf kubefedctl-0.1.0-rc4-linux-amd64.tgz -C ~/bin
+rm -f kubefedctl-0.1.0-rc4-linux-amd64.tgz
 ~~~
 
 Verify that `kubefedctl` is working:
 ~~~sh
 kubefedctl version
 
-kubefedctl version: version.Info{Version:"v0.1.0-rc3", GitCommit:"d188d227fe3f78f33d74d9a40b3cb701c471cc7e", GitTreeState:"clean", BuildDate:"2019-06-25T00:27:58Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
+kubefedctl version: version.Info{Version:"v0.1.0-rc4", GitCommit:"d188d227fe3f78f33d74d9a40b3cb701c471cc7e", GitTreeState:"clean", BuildDate:"2019-06-25T00:27:58Z", GoVersion:"go1.12.5", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
 
 ## Enable the Kubefed Controller Manager
