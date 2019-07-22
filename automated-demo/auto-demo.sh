@@ -244,8 +244,9 @@ download_kubefed_binary()
 setup_kubefed()
 {
   download_kubefed_binary
-  echo "Creating namespace ${DEMO_NAMESPACE} for deploying the demo"
+  echo "Creating namespace ${KUBEFED_NAMESPACE} for deploying the KubeFed Controller in cluster scope mode"
   run_ok_or_fail "oc --context=feddemocl1 create ns ${KUBEFED_NAMESPACE}" "0" "1"
+  echo "Creating namespace ${DEMO_NAMESPACE} for demo"
   run_ok_or_fail "oc --context=feddemocl1 create ns ${DEMO_NAMESPACE}" "0" "1"
   echo "Deploying Federation Operator on Host Cluster in namespace ${DEMO_NAMESPACE}"
   # Here detect if feddemocl1 is 3.11 or 4.X
