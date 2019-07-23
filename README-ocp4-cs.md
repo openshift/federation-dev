@@ -79,7 +79,9 @@ The installer creates a `kubeconfig` file for each cluster, we are going to
 merge them in the same file so we can use that file later with `kubefedctl`
 tool. As an example, if you use the `--dir` option to create cluster1 within a
 directory called `cluster1`, the kubeconfig will be in
-`cluster1/admin/kubeconfig`.
+`cluster1/admin/kubeconfig`. See also [our
+video](https://www.youtube.com/watch?v=zuh3JFtNbeU) outlining the process of
+combining kubeconfigs.
 
 First, we will rename the `admin` context and credentials of each cluster, then
 merge the two kubeconfig files.
