@@ -2,7 +2,7 @@
 
 # GLOBAL VAR
 KUBEFED_RELEASE="v0.1.0-rc4"
-CSV_RELEASE="v0.1.0"
+KUBEFED_CSV="kubefed-operator.v0.1.0"
 KUBEFED_NAMESPACE="kube-federation-system"
 
 usage()
@@ -241,16 +241,44 @@ download_kubefed_binary()
   fi
 }
 
+create_kubefed_namespace()
+{
+  NAMESPACE_CHECK=$(oc --context=feddemocl1 get ns ${KUBEFED_NAMESPACE} -o name 2>/dev/null | wc -l)
+  NAMESPACE_ALREADY_EXISTS=0
+  if [ "0${NAMESPACE_CHECK}" == "01" ]
+  then
+    NAMESPACE_ALREADY_EXISTS=1
+  else
+    run_ok_or_fail "oc --context=feddemocl1 create ns ${KUBEFED_NAMESPACE}" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 annotate namespace ${KUBEFED_NAMESPACE} auto-demo='${DEMO_NAMESPACE}'" "0" "1"
+  fi
+  echo ${NAMESPACE_ALREADY_EXISTS}
+}
+
+delete_kubefed_namespace()
+{
+  CLUSTER="$1"
+  NAMESPACE_ANNOTATION=$(oc --context=${CLUSTER} get ns ${KUBEFED_NAMESPACE} -o "jsonpath={.metadata.annotations['auto-demo']}" 2>/dev/null)
+  if [ "0${NAMESPACE_ANNOTATION}" == "0${DEMO_NAMESPACE}" ]
+  then
+    echo "1"
+  fi
+}
+
 setup_kubefed()
 {
-  download_kubefed_binary
-  echo "Creating namespace ${KUBEFED_NAMESPACE} for deploying the KubeFed Controller in cluster scope mode"
-  run_ok_or_fail "oc --context=feddemocl1 create ns ${KUBEFED_NAMESPACE}" "0" "1"
+  KUBEFED_NAMESPACE_ALREADY_EXISTS=$(create_kubefed_namespace)
+  if [ "0${KUBEFED_NAMESPACE_ALREADY_EXISTS}" == "01" ]
+  then
+    echo "${KUBEFED_NAMESPACE} namespace already exists in the cluster. We cannot proceed with the demo."
+    exit 1
+  else
+    echo "Namespace ${KUBEFED_NAMESPACE} created for deploying the KubeFed Controller in cluster scope mode."
+  fi
   echo "Creating namespace ${DEMO_NAMESPACE} for demo"
   run_ok_or_fail "oc --context=feddemocl1 create ns ${DEMO_NAMESPACE}" "0" "1"
+  download_kubefed_binary
   echo "Deploying Federation Operator on Host Cluster in namespace ${DEMO_NAMESPACE}"
-  # Here detect if feddemocl1 is 3.11 or 4.X
-  
   HOST_CLUSTER_VERSION=$(oc --context=feddemocl1 get clusterversion version -o jsonpath='{.spec.channel}' || echo "3") 
   if [ ${HOST_CLUSTER_VERSION} == "3" ]
   then
@@ -259,6 +287,7 @@ setup_kubefed()
     cp -pf yaml-resources/olm/02-olm.yaml yaml-resources/olm/02-olm-mod.yaml &> /dev/null
     cp -pf yaml-resources/olm/03-subscription.yaml yaml-resources/olm/03-subscription-mod.yaml &> /dev/null
     run_ok_or_fail 'sed -i "s/changemeNS/${KUBEFED_NAMESPACE}/g" yaml-resources/olm/03-subscription-mod.yaml' "1" "1"
+    run_ok_or_fail 'sed -i "s/changemeCSV/${KUBEFED_CSV}/g" yaml-resources/olm/03-subscription-mod.yaml' "1" "1"
     run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/01-olm-mod.yaml" "0" "1"
     run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/02-olm-mod.yaml" "0" "1"
     wait_for_deployment_ready "feddemocl1" "olm" "olm-operator"
@@ -273,11 +302,14 @@ setup_kubefed()
     run_ok_or_fail 'sed -i "s/changemeNS/${KUBEFED_NAMESPACE}/g" yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml' "1" "1"
     run_ok_or_fail 'sed -i "s/changemeNS/${KUBEFED_NAMESPACE}/g" yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml' "1" "1"
     run_ok_or_fail 'sed -i "s/changemeNS/${KUBEFED_NAMESPACE}/g" yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml' "1" "1"
+    run_ok_or_fail 'sed -i "s/changemeCSV/${KUBEFED_CSV}/g" yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml' "1" "1"
     run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace create -f yaml-resources/kubefed-operator/01-catalog-source-config-mod.yaml" "0" "1"
     run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} create -f yaml-resources/kubefed-operator/02-federation-operator-group-mod.yaml" "0" "1"
     run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} create -f yaml-resources/kubefed-operator/03-federation-subscription-mod.yaml" "0" "1"
   fi
-  wait_for_csv_completed "feddemocl1" "${KUBEFED_NAMESPACE}" "kubefed-operator.${CSV_RELEASE}"
+  approve_installplan "feddemocl1" "${KUBEFED_NAMESPACE}"
+  wait_for_csv_completed "feddemocl1" "${KUBEFED_NAMESPACE}" "${KUBEFED_CSV}"
+  wait_for_deployment_ready "feddemocl1" "${KUBEFED_NAMESPACE}" "kubefed-operator"
   run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} create -f yaml-resources/kubefed-operator/04-kubefed-resource.yaml"
   wait_for_deployment_ready "feddemocl1" "${KUBEFED_NAMESPACE}" "kubefed-controller-manager"
   echo "Enabling federated resources on Host Cluster (may take a while)"
@@ -398,6 +430,37 @@ wait_for_deployment_ready()
   done
 }
 
+approve_installplan()
+{
+  READY=0
+  WAIT=0
+  MAX_WAIT=300
+  CLUSTER="$1"
+  INSTALLPLAN_NAMESPACE="$2"
+  echo "Waiting installPlan to be created on namespace ${INSTALLPLAN_NAMESPACE}"
+  while [ $READY -eq 0 ]
+  do
+    INSTALLPLAN_NAME=$(oc --context=${CLUSTER} -n ${INSTALLPLAN_NAMESPACE} get installplan -o name 2>/dev/null | awk -F "/" '{print $2}')
+    if [ "$INSTALLPLAN_NAME" != "" ]
+    then
+      echo "InstallPlan ${INSTALLPLAN_NAME} detected. Proceeding to approve it"
+      PATCH='{"spec":{"approved":true}}'
+      run_ok_or_fail "oc --context=${CLUSTER} -n ${INSTALLPLAN_NAMESPACE} patch installplan ${INSTALLPLAN_NAME} --type=merge -p '${PATCH}'" "0" "1"
+      echo "InstallPlan patched"
+      READY=1
+    else
+      echo "InstallPlan still not created, waiting... [$WAIT/$MAX_WAIT]"
+      sleep 5
+      WAIT=$(expr $WAIT + 5)
+    fi
+    if [ $WAIT -ge $MAX_WAIT ]
+    then
+      echo "Timeout while waiting installPlan to be created on namespace ${INSTALLPLAN_NAMESPACE} on cluster ${CLUSTER}"
+      exit 1
+    fi
+  done
+}
+
 wait_for_csv_completed()
 {
   READY=0
@@ -459,7 +522,7 @@ mongo_pacman_demo_cleanup()
   echo "Deleting Subscription"
   run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete subscription federation" "0" "1"
   echo "Deleting ClusterServiceVersion"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete csv kubefed-operator.${CSV_RELEASE}" "0" "1"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete csv ${KUBEFED_CSV}" "0" "1"
   echo "Deleting CatalogSourceConfig"
   run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace delete catalogsourceconfig installed-federation-${KUBEFED_NAMESPACE}" "0" "1"
   echo "Deleting OperatorGroup"
@@ -469,12 +532,16 @@ mongo_pacman_demo_cleanup()
 namespace_kubefed_cleanup()
 {
   echo "Removing namespace from cluster"
-  run_ok_or_fail "oc --context=feddemocl1 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl2 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
-  run_ok_or_fail "oc --context=feddemocl3 delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
+  DELETE_KUBEFED_NS=$(delete_kubefed_namespace feddemocl1)
+  if [ "0${DELETE_KUBEFED_NS}" == "01" ]
+  then
+    for cluster in feddemocl1 feddemocl2 feddemocl3
+    do
+      run_ok_or_fail "oc --context=${cluster} delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
+    done
+  fi
   run_ok_or_fail "oc --context=feddemocl1 delete namespace ${DEMO_NAMESPACE}" "0" "1"
 }
-
 
 wait_for_input()
 {
