@@ -45,7 +45,7 @@ spec:
                   name: mongodb-users-secret
             - name: MONGO_DATABASE
               value: pacman
-            - name: MONGO_PORT
+            - name: MY_MONGO_PORT
               value: "443"
             - name: MONGO_USE_SSL
               value: "true"
