@@ -1,7 +1,11 @@
 # Deploy HAProxy for Pacman
 
-1. Modify the configmap definition [here](./yaml-resources/haproxy/haproxy.tmpl)
-   
+1. Copy and modify the configmap definition [here](./yaml-resources/haproxy/haproxy.tmpl)
+~~~sh
+cp yaml-resources/haproxy/haproxy.tmpl yaml-resources/haproxy/haproxy
+~~~   
+
+Make the following changes to the newly created haproxy file.
   ```
   backend app
     balance roundrobin
