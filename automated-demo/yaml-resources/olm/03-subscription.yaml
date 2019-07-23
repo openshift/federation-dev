@@ -15,5 +15,7 @@ metadata:
 spec:
   channel: alpha
   name: kubefed-operator
+  installPlanApproval: Manual
+  startingCSV: changemeCSV
   source: operatorhubio-catalog
   sourceNamespace: olm

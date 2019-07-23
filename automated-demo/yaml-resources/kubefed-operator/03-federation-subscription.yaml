@@ -6,6 +6,7 @@ metadata:
 spec:
   channel: alpha
   name: kubefed-operator
-  startingCSV: kubefed-operator.v0.1.0
+  startingCSV: changemeCSV
+  installPlanApproval: Manual
   source: installed-federation-changemeNS
   sourceNamespace: changemeNS
