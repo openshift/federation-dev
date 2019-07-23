@@ -22,7 +22,7 @@ spec:
           serviceAccount: pacman
           imagePullPolicy: Always
           containers:
-          - image: quay.io/rcook/pacman-nodejs-app:latest
+          - image: quay.io/ifont/pacman-nodejs-app:latest
             name: pacman
             env:
             - name: MONGO_SERVICE_HOST
@@ -45,7 +45,7 @@ spec:
                   name: mongodb-users-secret
             - name: MONGO_DATABASE
               value: pacman
-            - name: MONGO_PORT
+            - name: MY_MONGO_PORT
               value: "443"
             - name: MONGO_USE_SSL
               value: "true"
