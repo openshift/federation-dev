@@ -1,0 +1,17 @@
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedService
+metadata:
+  name: test-service
+spec:
+  template:
+    spec:
+      selector:
+        app: nginx
+      type: NodePort
+      ports:
+        - name: http
+          port: 80
+  placement:
+    clusters:
+    - name: cluster2
+    - name: cluster1
