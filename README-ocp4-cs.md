@@ -9,7 +9,7 @@
 - [Federation deployment](#federation-deployment)
   - [Create the two OpenShift clusters](#create-the-two-openshift-clusters)
   - [Configure client context for cluster admin access](#configure-client-context-for-cluster-admin-access)
-  - [Deploy Federation](#deploy-federation)
+  - [Deploy KubeFed](#deploy-kubefed)
   - [Register the clusters](#register-the-clusters)
 - [Example application](#example-application)
   - [Deploy the application](#deploy-the-application)
@@ -119,8 +119,8 @@ The presence and unique naming of the client contexts are important because the
 `kubefedctl` tool uses them to manage cluster registration, and they are
 referenced by context name.
 
-<a id="markdown-deploy-federation" name="deploy-federation"></a>
-## Deploy Federation
+<a id="markdown-deploy-kubefed" name="deploy-kubefed"></a>
+## Deploy KubeFed
 
 Federation member clusters do not require KubeFed to be installed on them, but
 for convenience, we will use one of the clusters (`cluster1`) to host
