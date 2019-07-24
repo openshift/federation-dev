@@ -31,9 +31,13 @@ KubeFed controller.
 <a id="markdown-pre-requisites" name="pre-requisites"></a>
 # Prerequisites
 
-The Federation Operator requires at least one [OpenShift Container Platform](https://www.openshift.com/) 4.1 cluster.
+The Federation Operator requires at least one [OpenShift Container
+Platform](https://www.openshift.com/) 4.1 cluster.
 
-This walkthrough will use two OCP 4.1 clusters deployed using the [Installer-Provisioned Infrastructure](https://cloud.redhat.com/openshift/install/aws) installation type.
+This walkthrough will use two OCP 4.1 clusters deployed using the
+[Installer-Provisioned
+Infrastructure](https://cloud.redhat.com/openshift/install/aws) installation
+type.
 
 <a id="markdown-install-the-kubefedctl-binary" name="install-the-kubefedctl-binary"></a>
 ## Install the kubefedctl binary
@@ -70,16 +74,21 @@ cd federation-dev/
 <a id="markdown-create-the-two-openshift-clusters" name="create-the-two-openshift-clusters"></a>
 ## Create the two OpenShift clusters
 
-Follow the [Installer Provisioned Infrastructure Instructions](https://cloud.redhat.com/openshift/install/aws/installer-provisioned) for installing two OpenShift 4.1 clusters on AWS. Be sure to employ the `--dir` option with a distinct directory for each cluster you create.
+Follow the [Installer Provisioned Infrastructure
+Instructions](https://cloud.redhat.com/openshift/install/aws/installer-provisioned)
+for installing two OpenShift 4.1 clusters on AWS. Be sure to employ the `--dir`
+option with a distinct directory for each cluster you create.
 
 <a id="markdown-configure-client-context-for-cluster-admin-access" name="configure-client-context-for-cluster-admin-access"></a>
 ## Configure client context for cluster admin access
 
-The installer creates a `kubeconfig` file for each cluster, we are going to
-merge them in the same file so we can use that file later with `kubefedctl`
+The installer creates a `kubeconfig` file for each cluster. We are going to
+merge them in the same file so we can use that file later with the `kubefedctl`
 tool. As an example, if you use the `--dir` option to create cluster1 within a
 directory called `cluster1`, the kubeconfig will be in
-`cluster1/admin/kubeconfig`.
+`cluster1/admin/kubeconfig`. See also [our
+video](https://www.youtube.com/watch?v=zuh3JFtNbeU) outlining the process of
+combining kubeconfigs.
 
 First, we will rename the `admin` context and credentials of each cluster, then
 merge the two kubeconfig files.
@@ -111,7 +120,7 @@ The presence and unique naming of the client contexts are important because the
 `kubefedctl` tool uses them to manage cluster registration, and they are
 referenced by context name.
 
-<a id="markdown-deploy-kubefed" name="deploy-federation"></a>
+<a id="markdown-deploy-kubefed" name="deploy-kubefed"></a>
 
 ## Deploy KubeFed
 
@@ -121,9 +130,15 @@ the KubeFed control plane.
 
 In order to deploy the operator, we are going to use `Operator Hub` within the OCP4 Web Console.
 
-The KubeFed operator supports two modes of operation: namespace scoped and
-cluster scoped. This guide will walk through federating a single namespace.
+KubeFed supports two modes of operation: namespace scoped and cluster scoped.
+This guide will walk through installing namespace scoped KubeFed.
 For a cluster-scoped guide, [click here](README-ocp4-cs.md)
+
+A note on namespaces: The KubeFed operator install provides an option to either
+limit the operator to watch a particular namespace or watch all namespaces
+cluster-wide (default). This is a different concept from KubeFed itself being
+either namespace or cluster scoped. In order to deploy namespace scoped KubeFed,
+you will install the operator to watch all namespaces, the default mode.
 
 1. Login into `cluster1` web console as `kubeadmin` user.
    1. Login details are reported by the installer and the password is peristed in the file `auth/kubeadmin-password`.
@@ -137,18 +152,19 @@ For a cluster-scoped guide, [click here](README-ocp4-cs.md)
    2. Select `KubeFed` from operator list.
    3. If a warning about use of Community Operators is shown click `Continue`.
    4. Click `Install`.
-   5. Select `A specific namespace on the cluster` to try namespaced mode.
-   6. Make sure `test-namespace` is selected as destination namespace.
-   7. Click `Subscribe`.
+   5. Under `Installation Mode`, ensure `All namespaces on the cluster (default)` is selected.
+   6. Click `Subscribe`.
 4. Check the Operator Subscription status.
    1. On the left panel click `Catalog -> Operator Management`.
    2. Click `Operator Subscriptions` tab.
    3. Ensure the `Status` is "Up to date" for the `kubefed-operator` subscription.
+   4. Note the namespace the operator has installed into is openshift-operators
 5. Create a KubeFed resource to instantiate the KubeFed controller.
    1. On the left panel click `Catalog -> Installed Operators`.
-   2. Click `Kubefed Operator`.
-   3. Under `Provided APIs`, find `KubeFed`, and click `Create New`.
-   4. Ensure the namespace is `test-namespace`, and click `Create`.
+   2. Select `test-namespace` from the drop down list for Project
+   3. Click `Kubefed Operator`.
+   4. Under `Provided APIs`, find `KubeFed`, and click `Create New`.
+   5. Ensure the namespace is `test-namespace` and the scope is `Namespaced` then click `Create`.
 
 If everything works as expected, there should be a kubefed-controller-manager
 Deployment with two pods running in `test-namespace`.
@@ -159,7 +175,6 @@ oc --context=cluster1 -n test-namespace get pods
 NAME                                             READY     STATUS    RESTARTS   AGE
 kubefed-controller-manager-744f57ccff-q4f6k  1/1       Running   0          3m18s
 kubefed-controller-manager-744f57ccff-2jb6b  1/1       Running   0          3m18s
-kubefed-operator-f4b8dfc86-rxccx             1/1       Running   0          4m32s
 ~~~
 
 Now we are going to enable some of the federated types needed for our demo application. You can watch as FederatedTypeConfig resources are created for each type by visiting the `All Instances` tab of the `Kubefed Operator` under `Catalog -> Installed Operators`.
