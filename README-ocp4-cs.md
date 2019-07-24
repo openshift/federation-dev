@@ -33,7 +33,10 @@ KubeFed controller.
 
 The Federation Operator requires at least one [OpenShift Container Platform](https://www.openshift.com/) 4.1 cluster.
 
-This walkthrough will use two OCP 4.1 clusters deployed using the [Installer-Provisioned Infrastructure](https://cloud.redhat.com/openshift/install/aws) installation type.
+This walkthrough will use two OCP 4.1 clusters deployed using the
+[Installer-Provisioned
+Infrastructure](https://cloud.redhat.com/openshift/install/aws) installation
+type.
 
 <a id="markdown-install-the-kubefedctl-binary" name="install-the-kubefedctl-binary"></a>
 ## Install the kubefedctl binary
@@ -70,13 +73,16 @@ cd federation-dev/
 <a id="markdown-create-the-two-openshift-clusters" name="create-the-two-openshift-clusters"></a>
 ## Create the two OpenShift clusters
 
-Follow the [Installer Provisioned Infrastructure Instructions](https://cloud.redhat.com/openshift/install/aws/installer-provisioned) for installing two OpenShift 4.1 clusters on AWS. Be sure to employ the `--dir` option with a distinct directory for each cluster you create.
+Follow the [Installer Provisioned Infrastructure
+Instructions](https://cloud.redhat.com/openshift/install/aws/installer-provisioned)
+for installing two OpenShift 4.1 clusters on AWS. Be sure to employ the `--dir`
+option with a distinct directory for each cluster you create.
 
 <a id="markdown-configure-client-context-for-cluster-admin-access" name="configure-client-context-for-cluster-admin-access"></a>
 ## Configure client context for cluster admin access
 
-The installer creates a `kubeconfig` file for each cluster, we are going to
-merge them in the same file so we can use that file later with `kubefedctl`
+The installer creates a `kubeconfig` file for each cluster. We are going to
+merge them in the same file so we can use that file later with the `kubefedctl`
 tool. As an example, if you use the `--dir` option to create cluster1 within a
 directory called `cluster1`, the kubeconfig will be in
 `cluster1/admin/kubeconfig`. See also [our
@@ -127,15 +133,13 @@ This guide will walk through federating all namespaces through cluster scoped
 KubeFed. There is also a guide to [namespace scoped KubeFed for OCP
 4](README-ocp4.md)
 
-A note on namespaces: The KubeFed operator itself supplies an option to either
-namespace the operator or install cluster-wide. This is a different concept
-from KubeFed itself being either namespace or cluster scoped. If you choose
-`All namespaces on the cluster` during the **operator** installation, it will
-install in the `openshift-operators` namespace, and you will need to supply the
-argument `--kubefed-namespace=openshift-operators` to all invocations of the
-`kubefedctl` command in this document. These instructions will instead guide
-you through installing the operator to the `kube-federation-system` namespace,
-which is the default namespace for the `kubefedctl` command to store its objects.
+A note on namespaces: The KubeFed operator install provides an option to either
+limit the operator to watch a particular namespace or watch all namespaces
+cluster-wide (default). This is a different concept from KubeFed itself being
+either namespace or cluster scoped. In order to deploy **cluster scoped KubeFed**,
+you will install the operator into a **single namespace**, the
+`kube-federation-system` namespace, which is the default for the `kubefedctl`
+command to store its objects.
 The namespace must be created on the command line because the web UI considers
 namespaces starting with `kube` to be protected.
 
@@ -154,16 +158,18 @@ namespaces starting with `kube` to be protected.
 3. Check the Operator Subscription status.
    1. On the left panel click `Catalog -> Operator Management`.
    2. Click `Operator Subscriptions` tab.
-   3. Ensure the `Status` is "Up to date" for the `kubefed-operator` subscription.
+   3. Ensure the `Status` is "Up to date" for the `kubefed-operator` subscription. This process may take a few minutes.
 4. Create a KubeFed resource to instantiate the KubeFed controller.
    1. On the left panel click `Catalog -> Installed Operators`.
    2. Click `Kubefed Operator`.
    3. Under `Provided APIs`, find `KubeFed`, and click `Create New`.
    4. Change the `spec: scope:` from `Namespaced` to `Cluster`.
-   5. Click `Create`
+   5. Ensure the namespace of the KubeFed object is `kube-federation-system`.
+   6. Click `Create`
 
 If everything works as expected, there should be a kubefed-controller-manager
-Deployment with two pods running in `kube-federation-system`.
+Deployment with two pods running in `kube-federation-system` alongside the
+`kubefed-operator` pod.
 
 ~~~sh
 oc --context=cluster1 -n kube-federation-system get pods
@@ -172,7 +178,6 @@ NAME                                          READY   STATUS    RESTARTS   AGE
 kubefed-controller-manager-67d5d5cc99-j9zh9   1/1     Running   0          1m
 kubefed-controller-manager-67d5d5cc99-s59gx   1/1     Running   0          1m
 kubefed-operator-694c8f9cdc-9pc5z             1/1     Running   0          2m
-
 ~~~
 
 Now we are going to enable some of the federated types needed for our demo
@@ -278,7 +283,7 @@ The sample application includes the following resources:
 
 -   A [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) of an nginx web server.
 -   A [Service](https://kubernetes.io/docs/concepts/services-networking/service/) of type NodePort for nginx.
--   A sample [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/), [Secret](https://kubernetes.io/docs/concepts/configuration/secret/) and [ServiceAccount](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/). These are not actually used by
+-   A [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/), [Secret](https://kubernetes.io/docs/concepts/configuration/secret/) and [ServiceAccount](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/). These are not actually used by
     the sample application (static nginx) but are included to illustrate how
     Kubefed would assist with more complex applications.
 
