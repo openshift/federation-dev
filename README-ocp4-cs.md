@@ -23,7 +23,7 @@
 <a id="markdown-introduction" name="introduction"></a>
 # Introduction
 
-This demo is a simple deployment of [KubeFed
+This demo is a simple deployment of the [KubeFed
 Operator](https://operatorhub.io/operator/kubefed-operator) on two OpenShift
 clusters. A sample application is deployed to both clusters through the
 KubeFed controller.
@@ -31,7 +31,8 @@ KubeFed controller.
 <a id="markdown-pre-requisites" name="pre-requisites"></a>
 # Prerequisites
 
-The Federation Operator requires at least one [OpenShift Container Platform](https://www.openshift.com/) 4.1 cluster.
+The Federation Operator requires at least one [OpenShift Container
+Platform](https://www.openshift.com/) 4.1 cluster.
 
 This walkthrough will use two OCP 4.1 clusters deployed using the
 [Installer-Provisioned
@@ -146,7 +147,7 @@ namespaces starting with `kube` to be protected.
 0. Create the `kube-federation-system` namespace.
    1. `oc create ns kube-federation-system`
 1. Login into `cluster1` web console as `kubeadmin` user.
-   1. Login details are reported by the installer in the file `auth/kubeadmin-password`.
+   1. Login details are reported by the installer and the password is peristed in the file `auth/kubeadmin-password`.
 2. Install KubeFed from `Operator Hub`.
    1. On the left panel click `Catalog -> Operator Hub`.
    2. Select `KubeFed` from operator list.
