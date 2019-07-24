@@ -1,4 +1,3 @@
-=======
 **Table of Contents**
 
 <!-- TOC depthFrom:1 insertAnchor:true orderedList:true -->
@@ -10,7 +9,7 @@
 - [Federation deployment](#federation-deployment)
   - [Create the two OpenShift clusters](#create-the-two-openshift-clusters)
   - [Configure client context for cluster admin access](#configure-client-context-for-cluster-admin-access)
-  - [Deploy Federation](#deploy-federation)
+  - [Deploy KubeFed](#deploy-kubefed)
   - [Register the clusters](#register-the-clusters)
 - [Example application](#example-application)
   - [Deploy the application](#deploy-the-application)
@@ -24,7 +23,7 @@
 <a id="markdown-introduction" name="introduction"></a>
 # Introduction
 
-This demo is a simple deployment of [KubeFed
+This demo is a simple deployment of the [KubeFed
 Operator](https://operatorhub.io/operator/kubefed-operator) on two OpenShift
 clusters. A sample application is deployed to both clusters through the
 KubeFed controller.
@@ -112,9 +111,9 @@ The presence and unique naming of the client contexts are important because the
 `kubefedctl` tool uses them to manage cluster registration, and they are
 referenced by context name.
 
-<a id="markdown-deploy-federation" name="deploy-federation"></a>
+<a id="markdown-deploy-kubefed" name="deploy-federation"></a>
 
-## Deploy Federation
+## Deploy KubeFed
 
 Federation member clusters do not require KubeFed to be installed on them, but
 for convenience, we will use one of the clusters (`cluster1`) to host
@@ -127,7 +126,7 @@ cluster scoped. This guide will walk through federating a single namespace.
 For a cluster-scoped guide, [click here](README-ocp4-cs.md)
 
 1. Login into `cluster1` web console as `kubeadmin` user.
-   1. Login details are reported by the installer in the file `auth/kubeadmin-password`.
+   1. Login details are reported by the installer and the password is peristed in the file `auth/kubeadmin-password`.
 2. Create the namespace (OpenShift project) to be federated.
    1. On the left panel click `Home -> Projects`.
    2. Click `Create Project`.
