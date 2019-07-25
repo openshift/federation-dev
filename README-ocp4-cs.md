@@ -121,7 +121,6 @@ The presence and unique naming of the client contexts are important because the
 referenced by context name.
 
 <a id="markdown-deploy-kubefed" name="deploy-kubefed"></a>
-
 ## Deploy KubeFed
 
 Federation member clusters do not require KubeFed to be installed on them, but
@@ -131,59 +130,64 @@ the KubeFed control plane.
 In order to deploy the operator, we are going to use `Operator Hub` within the OCP4 Web Console.
 
 KubeFed supports two modes of operation: namespace scoped and cluster scoped.
-This guide will walk through installing namespace scoped KubeFed.
-For a cluster-scoped guide, [click here](README-ocp4-cs.md)
+This guide will walk through federating all namespaces through cluster scoped
+KubeFed. There is also a guide to [namespace scoped KubeFed for OCP
+4](README-ocp4.md)
 
 A note on namespaces: The KubeFed operator install provides an option to either
 limit the operator to watch a particular namespace or watch all namespaces
 cluster-wide (default). This is a different concept from KubeFed itself being
-either namespace or cluster scoped. In order to deploy namespace scoped KubeFed,
-you will install the operator to watch all namespaces, the default mode.
+either namespace or cluster scoped. In order to deploy **cluster scoped KubeFed**,
+you will install the operator into a **single namespace**, the
+`kube-federation-system` namespace, which is the default for the `kubefedctl`
+command to store its objects.
+The namespace must be created on the command line because the web UI considers
+namespaces starting with `kube` to be protected.
 
+0. Create the `kube-federation-system` namespace.
+   1. `oc create ns kube-federation-system`
 1. Login into `cluster1` web console as `kubeadmin` user.
    1. Login details are reported by the installer and the password is peristed in the file `auth/kubeadmin-password`.
-2. Create the namespace (OpenShift project) to be federated.
-   1. On the left panel click `Home -> Projects`.
-   2. Click `Create Project`.
-   3. Name it `test-namespace`.
-   4. Click `Create`.
-3. Install KubeFed from `Operator Hub`.
+2. Install KubeFed from `Operator Hub`.
    1. On the left panel click `Catalog -> Operator Hub`.
    2. Select `KubeFed` from operator list.
    3. If a warning about use of Community Operators is shown click `Continue`.
    4. Click `Install`.
-   5. Under `Installation Mode`, ensure `All namespaces on the cluster (default)` is selected.
-   6. Click `Subscribe`.
-4. Check the Operator Subscription status.
+   5. Under `Installation Method`, Select A `specific namespace on the cluster`
+   6. Select `kube-federation-system` as the namespace.
+   7. Click `Subscribe`.
+3. Check the Operator Subscription status.
    1. On the left panel click `Catalog -> Operator Management`.
    2. Click `Operator Subscriptions` tab.
-   3. Ensure the `Status` is "Up to date" for the `kubefed-operator` subscription.
-   4. Note the namespace the operator has installed into is openshift-operators
-5. Create a KubeFed resource to instantiate the KubeFed controller.
+   3. Ensure the `Status` is "Up to date" for the `kubefed-operator` subscription. This process may take a few minutes.
+4. Create a KubeFed resource to instantiate the KubeFed controller.
    1. On the left panel click `Catalog -> Installed Operators`.
-   2. Select `test-namespace` from the drop down list for Project
-   3. Click `Kubefed Operator`.
-   4. Under `Provided APIs`, find `KubeFed`, and click `Create New`.
-   5. Ensure the namespace is `test-namespace` and the scope is `Namespaced` then click `Create`.
+   2. Click `Kubefed Operator`.
+   3. Under `Provided APIs`, find `KubeFed`, and click `Create New`.
+   4. Change the `spec: scope:` from `Namespaced` to `Cluster`.
+   5. Ensure the namespace of the KubeFed object is `kube-federation-system`.
+   6. Click `Create`
 
 If everything works as expected, there should be a kubefed-controller-manager
-Deployment with two pods running in `test-namespace`.
+Deployment with two pods running in `kube-federation-system` alongside the
+`kubefed-operator` pod.
 
 ~~~sh
-oc --context=cluster1 -n test-namespace get pods
+oc --context=cluster1 -n kube-federation-system get pods
 
-NAME                                             READY     STATUS    RESTARTS   AGE
-kubefed-controller-manager-744f57ccff-q4f6k  1/1       Running   0          3m18s
-kubefed-controller-manager-744f57ccff-2jb6b  1/1       Running   0          3m18s
+NAME                                          READY   STATUS    RESTARTS   AGE
+kubefed-controller-manager-67d5d5cc99-j9zh9   1/1     Running   0          1m
+kubefed-controller-manager-67d5d5cc99-s59gx   1/1     Running   0          1m
+kubefed-operator-694c8f9cdc-9pc5z             1/1     Running   0          2m
 ~~~
 
-Now we are going to enable some of the federated types needed for our demo application. You can watch as FederatedTypeConfig resources are created for each type by visiting the `All Instances` tab of the `Kubefed Operator` under `Catalog -> Installed Operators`.
+Now we are going to enable some of the federated types needed for our demo
+application. You can watch as FederatedTypeConfig resources are created for
+each type by visiting the `All Instances` tab of the `Kubefed Operator` under
+`Catalog -> Installed Operators`.
 
 ~~~sh
-for type in namespaces secrets serviceaccounts services configmaps deployments.apps
-do
-    kubefedctl enable $type --kubefed-namespace test-namespace 
-done
+kubefedctl enable namespaces secrets serviceaccounts services configmaps deployments.apps scc
 ~~~
 
 <a id="markdown-register-the-clusters" name="register-the-clusters"></a>
@@ -193,7 +197,7 @@ Verify that there are no clusters yet (but note
 that you can already reference the CRDs for federated clusters):
 
 ~~~sh
-oc get kubefedclusters -n test-namespace
+oc get kubefedclusters -n kube-federation-system
 
 No resources found.
 ~~~
@@ -204,12 +208,10 @@ Now use the `kubefedctl` tool to register (*join*) the two clusters:
 kubefedctl join cluster1 \
             --host-cluster-context cluster1 \
             --cluster-context cluster1 \
-            --kubefed-namespace=test-namespace \
             --v=2
 kubefedctl join cluster2 \
             --host-cluster-context cluster1 \
             --cluster-context cluster2 \
-            --kubefed-namespace=test-namespace \
             --v=2
 ~~~
 
@@ -226,72 +228,11 @@ Verify that the federated clusters are registered and in a ready state (this
 can take a moment):
 
 ~~~sh
-oc describe kubefedclusters -n test-namespace
+oc -n kube-federation-system get kubefedclusters 
 
-Name:         cluster1
-Namespace:    test-namespace
-Labels:       <none>
-Annotations:  <none>
-API Version:  core.kubefed.k8s.io/v1beta1
-Kind:         KubeFedCluster
-Metadata:
-  Creation Timestamp:  2019-07-16T02:39:05Z
-  Generation:          1
-  Resource Version:    92327
-  Self Link:           /apis/core.kubefed.k8s.io/v1beta1/namespaces/test-namespace/kubefedclusters/cluster1
-  UID:                 e121be84-a772-11e9-ab57-0209a2dfbbc0
-Spec:
-  API Endpoint:  https://api.cluster1.aws.sysdeseng.com:6443
-  Ca Bundle:    Omitted 
-  Secret Ref:
-    Name:  cluster1-w2s55
-Status:
-  Conditions:
-    Last Probe Time:       2019-07-16T02:41:24Z
-    Last Transition Time:  2019-07-16T02:41:24Z
-    Message:               /healthz responded with ok
-    Reason:                ClusterReady
-    Status:                True
-    Type:                  Ready
-  Region:                  us-east-1
-  Zones:
-    us-east-1a
-    us-east-1b
-    us-east-1c
-Events:  <none>
-
-
-Name:         cluster2
-Namespace:    test-namespace
-Labels:       <none>
-Annotations:  <none>
-API Version:  core.kubefed.k8s.io/v1beta1
-Kind:         KubeFedCluster
-Metadata:
-  Creation Timestamp:  2019-07-16T02:40:10Z
-  Generation:          1
-  Resource Version:    92328
-  Self Link:           /apis/core.kubefed.k8s.io/v1beta1/namespaces/test-namespace/kubefedclusters/cluster2
-  UID:                 0794d03e-a773-11e9-829e-0ebfb37fb274
-Spec:
-  API Endpoint:  https://api.cluster2.aws.sysdeseng.com:6443
-  Ca Bundle:     Omitted
-  Secret Ref:
-    Name:  cluster2-f6xtm
-Status:
-  Conditions:
-    Last Probe Time:       2019-07-16T02:41:24Z
-    Last Transition Time:  2019-07-16T02:41:24Z
-    Message:               /healthz responded with ok
-    Reason:                ClusterReady
-    Status:                True
-    Type:                  Ready
-  Region:                  us-east-1
-  Zones:
-    us-east-1a
-    us-east-1b
-    us-east-1c
-Events:  <none>
+NAME       READY   AGE
+cluster1   True    2m
+cluster2   True    2m
 ~~~
 
 <a id="markdown-example-application" name="example-application"></a>
@@ -300,25 +241,26 @@ Events:  <none>
 Now that we have kubefed installed, let’s deploy an example app in both
 clusters through the kubefed control plane.
 
+First, create a test namespace to hold the example application:
+
+~~~sh
+oc create ns test-namespace
+~~~
+
+Next, add the test-namespace to KubeFed using the federate command:
+
+~~~sh
+kubefedctl federate namespace test-namespace
+~~~
+
 Verify that our test-namespace is present in both clusters now:
 
 ~~~sh
 oc --context=cluster1 get ns | grep test-namespace
 oc --context=cluster2 get ns | grep test-namespace
 
-test-namespace                 Active    36m
-test-namespace                 Active    3m21s
-~~~
-
-The container image we will use for our example application (nginx) requires the
-ability to choose its user id. Configure the clusters to grant that privilege:
-
-~~~sh
-for c in cluster1 cluster2; do
-    oc --context ${c} \
-        adm policy add-scc-to-user anyuid \
-        system:serviceaccount:test-namespace:default
-done
+test-namespace                 Active    2m
+test-namespace                 Active    1m
 ~~~
 
 <a id="markdown-deploy-the-application" name="deploy-the-application"></a>
@@ -328,20 +270,31 @@ The sample application includes the following resources:
 
 -   A [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) of an nginx web server.
 -   A [Service](https://kubernetes.io/docs/concepts/services-networking/service/) of type NodePort for nginx.
--   A sample [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/), [Secret](https://kubernetes.io/docs/concepts/configuration/secret/) and [ServiceAccount](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/). These are not actually used by
-    the sample application (static nginx) but are included to illustrate how
-    Kubefed would assist with more complex applications.
+-   A [ServiceAccount](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) which the deployment uses to run the nginx web server.
+-   A [SecurityContextConstraint](https://docs.okd.io/latest/admin_guide/manage_scc.html) cloned from the OpenShift SCC `anyuid`
+-   Additionally, a [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/), and a [Secret](https://kubernetes.io/docs/concepts/configuration/secret/). These are not actually used by the sample application (static nginx) but are included to illustrate how KubeFed would assist with more complex applications.
 
-The [sample-app directory](./sample-app) contains definitions to deploy these resources. For each of them there is a resource template and a placement policy, and some of
-them also have overrides. For example: the [sample nginx deployment template](./sample-app/federateddeployment.yaml)
-specifies 3 replicas, but there is also an override that sets the replicas to 5
-on `cluster2`.
+The [sample-clusterscoped directory](./sample-clusterscoped) contains
+definitions to deploy these resources. For each of them there is a resource
+template and a placement policy, and some of them also have overrides. For
+example: the [sample nginx deployment
+template](./sample-app/federateddeployment.yaml) specifies 3 replicas, but
+there is also an override that sets the replicas to 5 on `cluster2`.
 
 Instantiate all these federated resources:
 
 ~~~sh
-oc apply -R -f sample-app
+oc apply -R -f sample-clusterscoped
 ~~~
+
+The container image we use for our example application (nginx) requires the
+ability to choose its user id. Normally we would need to run an oc adm command on
+each cluster to make this happen, but for the cluster scoped example, we include
+an example federated SecurityContextConstraint (SCC), targeting the federated
+`test-serviceaccount` user in the `test-namespace`. If you choose a different
+namespace for testing, update the `federatedscc.yaml` with the new namespace.
+As SCCs are not namespaced objects, this is an example of a resource which
+namespace scoped KubeFed is unable to federate.
 
 <a id="markdown-verify-that-the-application-is-running" name="verify-that-the-application-is-running"></a>
 ## Verify that the application is running

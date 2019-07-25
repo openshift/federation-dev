@@ -1,0 +1,40 @@
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  name: test-deployment
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: nginx
+      template:
+        metadata:
+          labels:
+            app: nginx
+        spec:
+          containers:
+          - image: nginx
+            name: nginx
+          serviceAccountName: test-serviceaccount
+  placement:
+    clusters:
+    - name: cluster2
+    - name: cluster1
+  overrides:
+  - clusterName: cluster2
+    clusterOverrides:
+    - path: "/spec/replicas"
+      value: 5
+    - path: "/spec/template/spec/containers/0/image"
+      value: "nginx:1.17.0-alpine"
+    - path: "/metadata/annotations"
+      op: "add"
+      value:
+        foo: bar
+    - path: "/metadata/annotations/foo"
+      op: "remove"

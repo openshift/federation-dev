@@ -29,5 +29,6 @@ OpenShift 3.11 versions for the simple application scenario are also available:
 
 ### Cluster Scoped
 Cluster scoped KubeFed is now supported as of version 0.1.0 of the KubeFed
-operator. A walkthrough using cluster scoped KubeFed is currently under
-development.
+operator.
+
+* A simple application federated [OpenShift Container Platform 4 (cluster scoped)](./README-ocp4-cs.md)
