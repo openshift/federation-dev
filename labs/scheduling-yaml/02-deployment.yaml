@@ -1,0 +1,33 @@
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  labels:
+    name: reverse-words
+  name: reverse-words
+spec:
+  template:
+    metadata:
+      labels:
+        name: reverse-words
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          name: reverse-words
+      template:
+        metadata:
+          labels:
+            name: reverse-words
+        spec:
+          containers:
+          - image: quay.io/mavazque/reversewords:latest
+            imagePullPolicy: IfNotPresent
+            name: reverse-words
+            ports:
+            - name: reverse-words
+              containerPort: 8080
+  placement:
+    clusters:
+    - name: cluster1
+    - name: cluster2
+    - name: cluster3
