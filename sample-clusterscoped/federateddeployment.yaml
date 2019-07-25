@@ -20,6 +20,7 @@ spec:
           containers:
           - image: nginx
             name: nginx
+          serviceAccountName: test-serviceaccount
   placement:
     clusters:
     - name: cluster2

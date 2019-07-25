@@ -187,10 +187,7 @@ each type by visiting the `All Instances` tab of the `Kubefed Operator` under
 `Catalog -> Installed Operators`.
 
 ~~~sh
-for type in namespaces secrets serviceaccounts services configmaps deployments.apps
-do
-    kubefedctl enable $type
-done
+kubefedctl enable namespaces secrets serviceaccounts services configmaps deployments.apps scc
 ~~~
 
 <a id="markdown-register-the-clusters" name="register-the-clusters"></a>
@@ -266,17 +263,6 @@ test-namespace                 Active    2m
 test-namespace                 Active    1m
 ~~~
 
-The container image we will use for our example application (nginx) requires the
-ability to choose its user id. Configure the clusters to grant that privilege:
-
-~~~sh
-for c in cluster1 cluster2; do
-    oc --context ${c} \
-        adm policy add-scc-to-user anyuid \
-        system:serviceaccount:test-namespace:default
-done
-~~~
-
 <a id="markdown-deploy-the-application" name="deploy-the-application"></a>
 ## Deploy the application
 
@@ -284,20 +270,31 @@ The sample application includes the following resources:
 
 -   A [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) of an nginx web server.
 -   A [Service](https://kubernetes.io/docs/concepts/services-networking/service/) of type NodePort for nginx.
--   A [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/), [Secret](https://kubernetes.io/docs/concepts/configuration/secret/) and [ServiceAccount](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/). These are not actually used by
-    the sample application (static nginx) but are included to illustrate how
-    Kubefed would assist with more complex applications.
+-   A [ServiceAccount](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) which the deployment uses to run the nginx web server.
+-   A [SecurityContextConstraint](https://docs.okd.io/latest/admin_guide/manage_scc.html) cloned from the OpenShift SCC `anyuid`
+-   Additionally, a [ConfigMap](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/), and a [Secret](https://kubernetes.io/docs/concepts/configuration/secret/). These are not actually used by the sample application (static nginx) but are included to illustrate how KubeFed would assist with more complex applications.
 
-The [sample-app directory](./sample-app) contains definitions to deploy these resources. For each of them there is a resource template and a placement policy, and some of
-them also have overrides. For example: the [sample nginx deployment template](./sample-app/federateddeployment.yaml)
-specifies 3 replicas, but there is also an override that sets the replicas to 5
-on `cluster2`.
+The [sample-clusterscoped directory](./sample-clusterscoped) contains
+definitions to deploy these resources. For each of them there is a resource
+template and a placement policy, and some of them also have overrides. For
+example: the [sample nginx deployment
+template](./sample-app/federateddeployment.yaml) specifies 3 replicas, but
+there is also an override that sets the replicas to 5 on `cluster2`.
 
 Instantiate all these federated resources:
 
 ~~~sh
-oc apply -R -f sample-app
+oc apply -R -f sample-clusterscoped
 ~~~
+
+The container image we use for our example application (nginx) requires the
+ability to choose its user id. Normally we would need to run an oc adm command on
+each cluster to make this happen, but for the cluster scoped example, we include
+an example federated SecurityContextConstraint (SCC), targeting the federated
+`test-serviceaccount` user in the `test-namespace`. If you choose a different
+namespace for testing, update the `federatedscc.yaml` with the new namespace.
+As SCCs are not namespaced objects, this is an example of a resource which
+namespace scoped KubeFed is unable to federate.
 
 <a id="markdown-verify-that-the-application-is-running" name="verify-that-the-application-is-running"></a>
 ## Verify that the application is running

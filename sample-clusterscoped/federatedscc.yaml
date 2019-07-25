@@ -1,0 +1,41 @@
+---
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedSecurityContextConstraints
+metadata:
+  name: test-anyuid
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    allowHostDirVolumePlugin: false
+    allowHostIPC: false
+    allowHostNetwork: false
+    allowHostPID: false
+    allowHostPorts: false
+    allowPrivilegeEscalation: true
+    allowPrivilegedContainer: false
+    fsGroup:
+      type: RunAsAny
+    groups:
+    - system:cluster-admins
+    metadata: {}
+    priority: 10
+    readOnlyRootFilesystem: false
+    requiredDropCapabilities:
+    - MKNOD
+    runAsUser:
+      type: RunAsAny
+    seLinuxContext:
+      type: MustRunAs
+    supplementalGroups:
+      type: RunAsAny
+    users:
+    - system:serviceaccount:test-namespace:test-serviceaccount
+    volumes:
+    - configMap
+    - downwardAPI
+    - emptyDir
+    - persistentVolumeClaim
+    - projected
+    - secret
