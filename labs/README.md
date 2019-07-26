@@ -9,3 +9,4 @@ This page contains a series of labs to be conducted during Red Hat Tech exchange
 [Lab 5 - Deploying MongoDB](./5.md)<br>
 [Lab 6 - Deploying Pacman](./6.md)<br>
 [Lab 7 - Application Portability](./7.md)<br>
+[Lab 8 - Convert a Namespace to a Federated Namespace](./8.md)<br>
