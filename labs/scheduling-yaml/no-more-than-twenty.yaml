@@ -1,0 +1,15 @@
+apiVersion: scheduling.kubefed.io/v1alpha1
+kind: ReplicaSchedulingPreference
+metadata:
+metadata:
+  name: reverse-words
+  namespace: reverse-words
+spec:
+  targetKind: FederatedDeployment
+  totalReplicas: 80
+  clusters:
+    "*":
+      weight: 1
+    cluster2:
+      maxReplicas: 20
+      weight: 1
