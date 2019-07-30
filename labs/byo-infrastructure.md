@@ -150,7 +150,7 @@ as three contexts (cluster1, cluster2 and cluster3) in the `oc` tool.
         termination: edge
       to:
         kind: Service
-        name: haproxy-lb
+        name: haproxy-lb-service
         weight: 100
       wildcardPolicy: None
     ---
