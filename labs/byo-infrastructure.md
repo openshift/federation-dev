@@ -109,7 +109,7 @@ KubeFed Operator will be deployed to the first cluster, the following steps must
     oc -n kube-federation-system get installplan
     oc -n kube-federation-system patch installplan <installplan_name> --type merge -p '{"spec":{"approved":true}}'
     ```
-6. Wait `ClusterServiceVersion` to succeed (it may take some tike to Succeed)
+6. Wait `ClusterServiceVersion` to succeed (it may take some time to Succeed)
 
     ```sh
     oc -n kube-federation-system get csv
@@ -139,8 +139,8 @@ as three contexts (cluster1, cluster2 and cluster3) in the `oc` tool.
     kind: Route
     metadata:
       labels:
-        app: pacman-lb
-      name: pacman-lb
+        app: haproxy-lb
+      name: haproxy-lb
     spec: 
       port:
         targetPort: 8080
@@ -150,7 +150,7 @@ as three contexts (cluster1, cluster2 and cluster3) in the `oc` tool.
         termination: edge
       to:
         kind: Service
-        name: pacman-lb
+        name: haproxy-lb
         weight: 100
       wildcardPolicy: None
     ---
@@ -167,17 +167,17 @@ as three contexts (cluster1, cluster2 and cluster3) in the `oc` tool.
     # Copy the sample configmap
     cp haproxy.tmpl haproxy
     # Update the HAProxy configuration
-    sed -i 's/<pacman_lb_hostname>/${HAPROXY_LB_ROUTE}/g' haproxy
-    sed -i 's/<server1_name> <server1_pacman_route>:<route_port>/cluster1 ${PACMAN_CLUSTER1}:80/g' haproxy
-    sed -i 's/<server2_name> <server2_pacman_route>:<route_port>/cluster2 ${PACMAN_CLUSTER2}:80/g' haproxy
-    sed -i 's/<server3_name> <server3_pacman_route>:<route_port>/cluster3 ${PACMAN_CLUSTER3}:80/g' haproxy
+    sed -i "s/<pacman_lb_hostname>/${HAPROXY_LB_ROUTE}/g" haproxy
+    sed -i "s/<server1_name> <server1_pacman_route>:<route_port>/cluster1 ${PACMAN_CLUSTER1}:80/g" haproxy
+    sed -i "s/<server2_name> <server2_pacman_route>:<route_port>/cluster2 ${PACMAN_CLUSTER2}:80/g" haproxy
+    sed -i "s/<server3_name> <server3_pacman_route>:<route_port>/cluster3 ${PACMAN_CLUSTER3}:80/g" haproxy
     # Create the configmap
     oc --context cluster1 -n haproxy-lb create configmap haproxy --from-file=haproxy
     ```
-5. Create the HAProxy Service
+5. Create the HAProxy ClusterIP Service
 
     ```sh
-    oc --context cluster1 -n haproxy-lb create -f haproxy-service.yaml
+    oc --context cluster1 -n haproxy-lb create -f haproxy-clusterip-service.yaml
     ```
 
 6. Create the HAProxy Deployment
