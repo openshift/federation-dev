@@ -22,7 +22,7 @@ The following tools are used during the labs and must be present in the system u
     
     ```sh
     curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc4/kubefedctl-0.1.0-rc4-linux-amd64.tgz
-    tar xzf kubefedctl.tgz -C /usr/local/bin/
+    tar xzf kubefedctl-0.1.0-rc4-linux-amd64.tgz -C /usr/local/bin/
     chmod +x /usr/local/bin/kubefedctl
     rm -f kubefedctl.tgz
     ```
