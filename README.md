@@ -8,6 +8,7 @@ Put quite simply, Federation is the process of connecting one or more Kubernetes
 Kubernetes Federation is a tool to sync (aka "federate") a set of Kubernetes objects from a "source" into a set of other clusters. Common use-cases include federating Namespaces across all of your clusters or rolling out an application across several geographically distributed clusters. The Kubernetes Federation Operator runs all of the components under the hood to quickly get up and running with this powerful concept. Federation is a key part of any Hybrid Cloud capability.
 ``
 There are two ways to use Kubefed currently: Namespace and Cluster scoped.
+For a breakdown of what this entails, see our [KubeFed Cluster-Scoped Vs Namespace-Scoped](docs/kubefed-scope.md) guide.
 
 ### RHTE lab
 If you are attend Red Hat tech exchange follow the link below will bring you to the first lab.<br>
