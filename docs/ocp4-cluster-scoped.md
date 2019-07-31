@@ -132,7 +132,7 @@ In order to deploy the operator, we are going to use `Operator Hub` within the O
 KubeFed supports two modes of operation: namespace scoped and cluster scoped.
 This guide will walk through federating all namespaces through cluster scoped
 KubeFed. There is also a guide to [namespace scoped KubeFed for OCP
-4](README-ocp4.md)
+4](ocp4-namespace-scoped.md)
 
 A note on namespaces: The KubeFed operator install provides an option to either
 limit the operator to watch a particular namespace or watch all namespaces

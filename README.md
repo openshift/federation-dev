@@ -18,17 +18,17 @@ Namespace scoped Federation was initially the only supported mechanism for feder
 multiple OpenShift/Kubernetes environments. Namespace scoped Federation uses OperatorHub,
 which is included within OpenShift 4.1, to install the Federation Operator.
 
-* A simple application federated [OpenShift Container Plaform 4](./README-ocp4.md)
+* A simple application federated [OpenShift Container Plaform 4](./docs/ocp4-namespace-scoped.md)
 * Federated MongoDB and *Pacman* [Federating an application with a Database](./federated-mongodb/README.md)
 * An automated demo exists to demonstrate running Kubefed in 3.11 and 4.x clusters [Automated Demo](./automated-demo/README.md)
 
 OpenShift 3.11 versions for the simple application scenario are also available:
 
-* Using [Minishift](./README-minishift.md)
-* Using [CDK](./README-cdk.md)
+* Using [Minishift](./docs/minishift.md)
+* Using [CDK](./docs/cdk.md)
 
 ### Cluster Scoped
 Cluster scoped KubeFed is now supported as of version 0.1.0 of the KubeFed
 operator.
 
-* A simple application federated [OpenShift Container Platform 4 (cluster scoped)](./README-ocp4-cs.md)
+* A simple application federated [OpenShift Container Platform 4 (cluster scoped)](./docs/ocp4-cluster-scoped.md)
