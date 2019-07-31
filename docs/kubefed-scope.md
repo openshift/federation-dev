@@ -62,7 +62,7 @@
   * kube-system
   * kube-public
   * default
-  * <kubefed system namespace>
+  * kubefed system namespace
 
 ## Notes
 
