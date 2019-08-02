@@ -146,7 +146,7 @@ as three contexts (cluster1, cluster2 and cluster3) in the `oc` tool.
         targetPort: 8080
       subdomain: ""
       tls:
-        insecureEdgeTerminationPolicy: Redirect
+        insecureEdgeTerminationPolicy: Allow
         termination: edge
       to:
         kind: Service
@@ -160,7 +160,7 @@ as three contexts (cluster1, cluster2 and cluster3) in the `oc` tool.
 
     ```sh
     # Export the required vars
-    HAPROXY_LB_ROUTE=$(oc --context cluster1 -n haproxy-lb get route pacman-lb -o jsonpath='{.status.ingress[*].host}')
+    HAPROXY_LB_ROUTE=$(oc --context cluster1 -n haproxy-lb get route haproxy-lb -o jsonpath='{.status.ingress[*].host}')
     PACMAN_CLUSTER1=pacman.$(oc --context=cluster1 -n openshift-console get route console -o jsonpath='{.status.ingress[*].host}' | sed "s/.*\(apps.*\)/\1/g")
     PACMAN_CLUSTER2=pacman.$(oc --context=cluster2 -n openshift-console get route console -o jsonpath='{.status.ingress[*].host}' | sed "s/.*\(apps.*\)/\1/g")
     PACMAN_CLUSTER3=pacman.$(oc --context=cluster3 -n openshift-console get route console -o jsonpath='{.status.ingress[*].host}' | sed "s/.*\(apps.*\)/\1/g")
