@@ -132,7 +132,7 @@ In order to deploy the operator, we are going to use `Operator Hub` within the O
 
 KubeFed supports two modes of operation: namespace scoped and cluster scoped.
 This guide will walk through installing namespace scoped KubeFed.
-For a cluster-scoped guide, [click here](README-ocp4-cs.md)
+For a cluster-scoped guide, [click here](ocp4-cluster-scoped.md)
 
 A note on namespaces: The KubeFed operator install provides an option to either
 limit the operator to watch a particular namespace or watch all namespaces
@@ -176,6 +176,17 @@ NAME                                             READY     STATUS    RESTARTS   
 kubefed-controller-manager-744f57ccff-q4f6k  1/1       Running   0          3m18s
 kubefed-controller-manager-744f57ccff-2jb6b  1/1       Running   0          3m18s
 ~~~
+
+### Troubleshooting the operator
+*Note:* There is an issue in the latest version of the operator (as of this writing) where the operator does not properly listen to all namespaces. If, after creating a KubeFed resource, the kubefed-controller-manager deployment is not created in the test namespace, try the following:
+
+1. In the WebUI, on the left panel click `Catalog -> Installed Operators`.
+2. Select `Openshift Operators` from the `Projects` drop down list.
+3. Click `KubeFed Operator`.
+4. Click `YAML` to enter the editor for the CSV YAML content.
+5. Find the string `WATCH_NAMESPACE`
+6. Ensure `fieldPath` is set to `metadata.annotations['olm.targetNamespaces']`.
+7. Click `Save` to push the update to the operator.
 
 Now we are going to enable some of the federated types needed for our demo application. You can watch as FederatedTypeConfig resources are created for each type by visiting the `All Instances` tab of the `Kubefed Operator` under `Catalog -> Installed Operators`.
 
