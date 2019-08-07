@@ -4,11 +4,11 @@ metadata:
   name: reverse-words
 spec:
   targetKind: FederatedDeployment
+  reblance: true
   totalReplicas: 20
   clusters:
-    east1:
+    "*":
       weight: 1
-    east2:
-      weight: 2
-    west2:
-      weight: 3
+    cluster2:
+      maxReplicas: 10
+      weight: 1
