@@ -4,7 +4,7 @@ metadata:
   name: reverse-words
 spec:
   targetKind: FederatedDeployment
-  reblance: true
+  rebalance: true
   totalReplicas: 20
   clusters:
     "*":
