@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: reverse-words
+  name: reverse-words
+  namespace: reverse-words
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    name: reverse-words
+  sessionAffinity: None
+  type: ClusterIP

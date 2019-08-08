@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: reverse-words
+  name: reverse-words
+  labels:
+    name: reverse-words
+spec:
+  replicas: 1
+  selector:
+    matchLabels:  
+      name: reverse-words
+  template:
+    metadata:
+      namespace: reverse-words
+      labels:
+        name: reverse-words
+    spec:
+      containers:
+      - name: reverse-words
+        image: quay.io/mavazque/reversewords:latest 
+        imagePullPolicy: Always
+        ports:
+        - name: reverse-words
+          containerPort: 8080
