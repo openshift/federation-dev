@@ -6,9 +6,9 @@ spec:
   targetKind: FederatedDeployment
   totalReplicas: 20
   clusters:
-    east1:
+    cluster1:
       weight: 1
-    east2:
+    cluster2:
       weight: 2
-    west2:
+    cluster3:
       weight: 3
