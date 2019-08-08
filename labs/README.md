@@ -1,7 +1,4 @@
 # Red Hat Tech Exchange Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability
-This page contains a series of labs to be conducted during Red Hat Tech Exchange.
-
-# Red Hat Tech Exchange Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability
 This page contains a series of labs to be conducted during Red Hat Tech exchange.
 
 [Lab 0 - Introduction](./intro.md)<br>
