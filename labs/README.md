@@ -1,4 +1,7 @@
 # Red Hat Tech Exchange Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability
+This page contains a series of labs to be conducted during Red Hat Tech Exchange.
+
+# Red Hat Tech Exchange Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability
 This page contains a series of labs to be conducted during Red Hat Tech exchange.
 
 [Lab 0 - Introduction](./intro.md)<br>
@@ -10,5 +13,6 @@ This page contains a series of labs to be conducted during Red Hat Tech exchange
 [Lab 6 - Deploying Pacman](./6.md)<br>
 [Lab 7 - Application Portability](./7.md)<br>
 [Lab 8 - Convert a Namespace to a Federated Namespace](./8.md)<br>
-[Lab 9 - Replica Scheduling ](./9.md)<br>
-[Lab 10 - Wrap up ](./10.md)<br>
+[Lab 9 - Replica Scheduling](./9.md)<br>
+[Lab 10 - Disaster Recovery](./10.md)<br>
+[Lab 11 - Wrap up ](./11.md)<br>
