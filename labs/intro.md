@@ -3,13 +3,13 @@
 
 ## Getting your dedicated lab environments using Guid Grabber
 
-On your laptop, open **three** browser tabs to [*Lab GUID Assignment page*](https://www.opentlc.com/gg/gg.cgi?profile=generic_tester).
-
-### CHANGEME URL for RHTE will be generic_rhte
+On your laptop, open <span style="color:red">**THREE**</span> browser tabs to [*Lab GUID Assignment page*](https://www.opentlc.com/gg/gg.cgi?profile=generic_tester).
 
 From this page, you will be assigned your unique GUID, which you will use to access your unique lab environment and systems.
 
 For this lab you will need three different environments, pay attention while selecting the *Lab Code* from the drop down list.
+
+**You are not required to login anywhere at this point, in this intro lab you will only get the information related to your assigned lab environments.**
 
 ### Getting Cluster 1 Environment - Browser Tab 1
 
