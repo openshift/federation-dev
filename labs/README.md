@@ -22,7 +22,7 @@ In order to get started with the lab, click on **Lab 0 - Introduction**.
 
 * [Lab 0 - Introduction](./intro.md)<br>
 * [Lab 1 - Prerequisites](./1.md)<br>
-* [Lab 2 - Create OpenShift Clusters and Configure Context](./2.md)<br>
+* [Lab 2 - Login into OpenShift Clusters and Configure Context](./2.md)<br>
 * [Lab 3 - Deploy Federation](./3.md)<br>
 * [Lab 4 - Example Application One](./4.md)<br>
 * [Lab 5 - Deploying MongoDB](./5.md)<br>
