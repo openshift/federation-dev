@@ -1,0 +1,32 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: modify-federated-deployment
+spec:
+  inputs:
+    resources:
+      - name: source
+        type: git
+      - name: app-image
+        type: image
+  steps:
+    - name: pull-file
+      image: registry.redhat.io/openshift4/ose-cli-artifacts:latest
+      command: ["/bin/bash"]
+      args:
+        - "-c"
+        - "/usr/bin/oc get federateddeployment pacman -o yaml --export > federateddeployment.yaml"
+    - name: modify-file
+      image: registry.redhat.io/openshift4/ose-cli-artifacts:latest
+      command: ["sed"]
+      args:
+        - "-i"
+        - "s;image:.*;image: ${inputs.resources.app-image.url};g"
+        - "federateddeployment.yaml"
+    - name: deploy
+      image: registry.redhat.io/openshift4/ose-cli-artifacts:latest
+      command: ["/usr/bin/oc"]
+      args:
+        - "apply"
+        - "-f"
+        - "federateddeployment.yaml"

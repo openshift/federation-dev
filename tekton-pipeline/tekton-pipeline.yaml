@@ -1,0 +1,39 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: build-deploy-pipeline
+spec:
+  resources:
+  - name: app-git
+    type: git
+  - name: app-image
+    type: image
+  - name: base-image
+    type: image
+  tasks:
+  - name: build
+    taskRef:
+      name: s2i-pacman
+    params:
+      - name: TLSVERIFY
+        value: "false"
+    resources:
+      inputs:
+      - name: source
+        resource: app-git
+      - name: base-image
+        resource: base-image
+      outputs:
+      - name: image
+        resource: app-image
+  - name: deploy
+    taskRef:
+      name: modify-federated-deployment
+    runAfter:
+      - build
+    resources:
+      inputs:
+      - name: source
+        resource: app-git
+      - name: app-image
+        resource: app-image

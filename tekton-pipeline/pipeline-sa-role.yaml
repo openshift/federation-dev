@@ -1,0 +1,8 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: pipeline-role
+rules:
+- apiGroups: ["types.kubefed.k8s.io"]
+  resources: ["federateddeployments", "federatedservices", "federateddeploymentconfig"]
+  verbs: ["get", "list", "create", "update", "patch", "delete"]

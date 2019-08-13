@@ -1,0 +1,162 @@
+---
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  labels:
+    name: pacman
+  name: pacman
+spec:
+  template:
+    metadata:
+      labels:
+        name: pacman
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          name: pacman
+      template:
+        metadata:
+          labels:
+            name: pacman
+        spec:
+          serviceAccount: pacman
+          imagePullPolicy: Always
+          containers:
+          - image: quay.io/ifont/pacman-nodejs-app:latest
+            name: pacman
+            env:
+            - name: MONGO_SERVICE_HOST
+              # Single member MongoDB
+              # value: primarymongohere
+              # Replicaset (federated) MongoDB
+              value: replicamembershere
+              # Comment out MONGO_REPLICA_SET for the single-member Mongo
+            - name: MONGO_REPLICA_SET
+              value: rs0
+            - name: MONGO_AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  key: database-user
+                  name: mongodb-users-secret
+            - name: MONGO_AUTH_PWD
+              valueFrom:
+                secretKeyRef:
+                  key: database-password
+                  name: mongodb-users-secret
+            - name: MONGO_DATABASE
+              value: pacman
+            - name: MY_MONGO_PORT
+              value: "443"
+            - name: MONGO_USE_SSL
+              value: "true"
+            - name: MONGO_VALIDATE_SSL
+              value: "false"
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            ports:
+            - containerPort: 8080
+              name: http-server
+  placement:
+    clusterSelector:
+      matchLabels: {}
+---
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedService
+metadata:
+  name: pacman
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metadata:
+      labels:
+        name: pacman
+    spec:
+      type: LoadBalancer
+      ports:
+        - port: 80
+          targetPort: 8080
+          protocol: TCP
+      selector:
+        name: pacman
+---
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedSecret
+metadata:
+  name: mongodb-users-secret
+spec:
+  template:
+    data:
+      # clyde
+      database-admin-password: Y2x5ZGU=
+      # pacman
+      database-name: cGFjbWFu
+      # pinky
+      database-password: cGlua3k=
+      # blinky
+      database-user: Ymxpbmt5
+    type: Opaque
+  placement:
+    clusterSelector:
+      matchLabels: {}
+---
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedServiceAccount
+metadata:
+  name: pacman
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metadata:
+      labels:
+        name: pacman
+---
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedClusterRole
+metadata:
+  name: pacman
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metadata:
+      labels:
+        name: pacman
+    rules:
+    - apiGroups:
+      - ""
+      resources:
+      - pods
+      - nodes
+      verbs:
+      - get
+      - watch
+      - list
+---
+apiVersion: types.kubefed.k8s.io/v1beta1
+kind: FederatedClusterRoleBinding
+metadata:
+  name: pacman
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metadata:
+      labels:
+        name: pacman
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: pacman
+    subjects:
+    - kind: ServiceAccount
+      name: pacman
+      namespace: tekton-demo

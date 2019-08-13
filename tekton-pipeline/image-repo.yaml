@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pipeline-pull-secret
+data:
+  .dockerconfigjson: VALUE 
+type: kubernetes.io/dockerconfigjson

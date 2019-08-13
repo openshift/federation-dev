@@ -1,0 +1,30 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: pacman-image
+spec:
+  type: image
+  params:
+  - name: url
+    value: quay.io/rcook/pacman-nodejs-app-pipeline:v0.0.1
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: pacman-git
+spec:
+  type: git
+  params:
+  - name: url
+    value: https://github.com/cooktheryan/pacman
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: base-image
+spec:
+  type: image
+  params:
+  - name: url
+    value: registry.access.redhat.com/ubi8/nodejs-10
