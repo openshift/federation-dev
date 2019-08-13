@@ -20,7 +20,7 @@ spec:
             name: mongo
         spec:
           containers:
-          - image: quay.io/mavazque/mongodb:autors
+          - image: quay.io/mavazque/mongodb:autors2
             imagePullPolicy: Always
             name: mongo
             env:
