@@ -23,8 +23,7 @@ spec:
         resource: app-git
       - name: base-image
         resource: base-image
-      outputs:
-      - name: image
+      - name: app-image
         resource: app-image
   - name: deploy
     taskRef:
