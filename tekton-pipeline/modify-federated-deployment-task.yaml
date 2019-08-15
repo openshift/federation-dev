@@ -9,13 +9,16 @@ spec:
         type: git
       - name: app-image
         type: image
+    params:
+      - name: deployment
+        type: string
   steps:
     - name: pull-file
       image: registry.redhat.io/openshift4/ose-cli-artifacts:latest
       command: ["/bin/bash"]
       args:
         - "-c"
-        - "/usr/bin/oc get federateddeployment pacman -o yaml --export > federateddeployment.yaml"
+        - "/usr/bin/oc get federateddeployment ${params.deployment.string} -o yaml --export > federateddeployment.yaml"
     - name: modify-file
       image: registry.redhat.io/openshift4/ose-cli-artifacts:latest
       command: ["sed"]
