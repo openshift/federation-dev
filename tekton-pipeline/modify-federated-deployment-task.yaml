@@ -18,7 +18,7 @@ spec:
       command: ["/bin/bash"]
       args:
         - "-c"
-        - "/usr/bin/oc get federateddeployment ${params.deployment.string} -o yaml --export > federateddeployment.yaml"
+        - "/usr/bin/oc get federateddeployment ${inputs.params.deployment} -o yaml --export > federateddeployment.yaml"
     - name: modify-file
       image: registry.redhat.io/openshift4/ose-cli-artifacts:latest
       command: ["sed"]

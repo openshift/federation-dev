@@ -1,0 +1,22 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: build-deploy-pacman-pipeline
+  generateName: build-deploy-pipeline-
+spec:
+  serviceAccount: pipeline
+  pipelineRef:
+    name: build-deploy-pipeline
+  resources:
+    - name: app-git
+      resourceRef:
+        name: pacman-git
+    - name: app-image
+      resourceRef:
+        name: pacman-image
+    - name: base-image
+      resourceRef:
+        name: base-image
+  params:
+    - name: deployment
+      value: pacman
