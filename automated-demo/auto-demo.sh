@@ -4,6 +4,7 @@
 KUBEFED_RELEASE="v0.1.0-rc4"
 KUBEFED_CSV="kubefed-operator.v0.1.0"
 KUBEFED_NAMESPACE="kube-federation-system"
+HAPROXY_NAMESPACE="federation-demo-haproxy"
 
 usage()
 {
@@ -102,7 +103,6 @@ get_data_from_user()
 {
   echo "Input data examples:"
   echo "  Cluster1 URL: east-1.example.com"
-  echo "  Pacman LB URL: pacman.example.com"
   echo "  OCP Admin User: kubeadmin"
   echo "  Cluster1 Admin password: kN7Ts-V3Ry-S3cur3-8SfD8"
   echo "--------------------"
@@ -112,7 +112,6 @@ get_data_from_user()
   read -rp "Cluster2 OCP Version [3|4]: " CLUSTER2_VERSION
   read -rp "Cluster3 URL: " CLUSTER3_URL 
   read -rp "Cluster3 OCP Version [3|4]: " CLUSTER3_VERSION
-  read -rp "Pacman LB URL: " PACMAN_URL
   read -rp "OCP Admin User: " ADMIN_USER
   read -rp "Cluster1 Admin: " CLUSTER1_ADMIN
   read -rp "Cluster1 Admin Password: " CLUSTER1_ADMIN_PWD
@@ -140,7 +139,6 @@ get_data_from_user()
   echo "Cluster 1 Domain: ${CLUSTER1_URL} - API: ${CLUSTER1_API_URL} - Admin User: ${CLUSTER1_ADMIN}"
   echo "Cluster 2 Domain: ${CLUSTER2_URL} - API: ${CLUSTER2_API_URL} - Admin User: ${CLUSTER2_ADMIN}"
   echo "Cluster 3 Domain: ${CLUSTER3_URL} - API: ${CLUSTER3_API_URL} - Admin User: ${CLUSTER3_ADMIN}"
-  echo "Pacman LB URL: ${PACMAN_URL}"
 }
 
 get_data_from_inventory()
@@ -168,7 +166,6 @@ get_data_from_inventory()
   then
     CLUSTER3_API_URL="https://console.${CLUSTER3_URL}:8443"
   fi
-  PACMAN_URL=$(./bin/jq -r '.pacman_lb_url' $INVENTORY)
   ADMIN_USER=$(./bin/jq -r '.admin_user' $INVENTORY)
   CLUSTER1_ADMIN=$(./bin/jq -r '.cluster1.admin_user' $INVENTORY)
   CLUSTER1_ADMIN_PWD=$(./bin/jq -r '.cluster1.admin_password' $INVENTORY)
@@ -180,7 +177,6 @@ get_data_from_inventory()
   echo "Cluster 1 Domain: ${CLUSTER1_URL} - API: ${CLUSTER1_API_URL} - Admin User: ${CLUSTER1_ADMIN}"
   echo "Cluster 2 Domain: ${CLUSTER2_URL} - API: ${CLUSTER2_API_URL} - Admin User: ${CLUSTER2_ADMIN}"
   echo "Cluster 3 Domain: ${CLUSTER3_URL} - API: ${CLUSTER3_API_URL} - Admin User: ${CLUSTER3_ADMIN}"
-  echo "Pacman URL: $PACMAN_URL"
 }
 
 get_input_data()
@@ -241,16 +237,17 @@ download_kubefed_binary()
   fi
 }
 
-create_kubefed_namespace()
+create_annotated_namespace()
 {
-  NAMESPACE_CHECK=$(oc --context=feddemocl1 get ns ${KUBEFED_NAMESPACE} -o name 2>/dev/null | wc -l)
+  NS_NAME="$1"
+  NAMESPACE_CHECK=$(oc --context=feddemocl1 get ns ${NS_NAME} -o name 2>/dev/null | wc -l)
   NAMESPACE_ALREADY_EXISTS=0
   if [ "0${NAMESPACE_CHECK}" == "01" ]
   then
     NAMESPACE_ALREADY_EXISTS=1
   else
-    run_ok_or_fail "oc --context=feddemocl1 create ns ${KUBEFED_NAMESPACE}" "0" "1"
-    run_ok_or_fail "oc --context=feddemocl1 annotate namespace ${KUBEFED_NAMESPACE} auto-demo='${DEMO_NAMESPACE}'" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 create ns ${NS_NAME}" "0" "1"
+    run_ok_or_fail "oc --context=feddemocl1 annotate namespace ${NS_NAME} auto-demo='${DEMO_NAMESPACE}'" "0" "1"
   fi
   echo ${NAMESPACE_ALREADY_EXISTS}
 }
@@ -265,9 +262,53 @@ delete_kubefed_namespace()
   fi
 }
 
+get_clusters_wilcard_domain()
+{
+  for cluster in feddemocl1 feddemocl2 feddemocl3
+  do
+    oc --context=$cluster -n default create route edge wildcarddomain --service=test --port=8080 > /dev/null
+  done
+  WILDCARD_DOMAIN_CL1=$(oc --context=feddemocl1 -n default get route wildcarddomain -o jsonpath='{.status.ingress[*].host}' | sed "s/wildcarddomain-default.\(.*\)/\1/g")
+  WILDCARD_DOMAIN_CL2=$(oc --context=feddemocl2 -n default get route wildcarddomain -o jsonpath='{.status.ingress[*].host}' | sed "s/wildcarddomain-default.\(.*\)/\1/g")
+  WILDCARD_DOMAIN_CL3=$(oc --context=feddemocl3 -n default get route wildcarddomain -o jsonpath='{.status.ingress[*].host}' | sed "s/wildcarddomain-default.\(.*\)/\1/g")
+  for cluster in feddemocl1 feddemocl2 feddemocl3
+  do
+    oc --context=$cluster -n default delete route wildcarddomain > /dev/null
+  done
+}
+
+setup_haproxy()
+{
+  HAPROXY_NAMESPACE_ALREADY_EXISTS=$(create_annotated_namespace $HAPROXY_NAMESPACE)
+  if [ "0${HAPROXY_NAMESPACE_ALREADY_EXISTS}" == "01" ]
+  then
+    echo "${HAPROXY_NAMESPACE} namespace already exists in the cluster. We cannot proceed with the demo."
+    exit 1
+  else
+    echo "Namespace ${HAPROXY_NAMESPACE} created for deploying the HAProxy Load Balancer."
+  fi
+  echo "Deploying HAProxy on feddemocl1 cluster in namespace ${KUBEFED_NAMESPACE}"
+  HAPROXY_LB_ROUTE=pacman-multicluster.${WILDCARD_DOMAIN_CL1}
+  PACMAN_INGRESS=pacman-ingress.${WILDCARD_DOMAIN_CL1}
+  run_ok_or_fail "oc --context=feddemocl1 -n ${HAPROXY_NAMESPACE} create route edge haproxy-lb --service=haproxy-lb-service --port=8080 --insecure-policy=Allow --hostname=${HAPROXY_LB_ROUTE}" "0" "1"
+  PACMAN_CLUSTER1=pacman.${WILDCARD_DOMAIN_CL1}
+  PACMAN_CLUSTER2=pacman.${WILDCARD_DOMAIN_CL2}
+  PACMAN_CLUSTER3=pacman.${WILDCARD_DOMAIN_CL3}
+  cp -pf yaml-resources/haproxy/haproxy.tmpl yaml-resources/haproxy/haproxy
+  run_ok_or_fail 'sed -i "/option httpchk GET/a \ \ \ \ http-request set-header Host ${PACMAN_INGRESS}" yaml-resources/haproxy/haproxy'
+  run_ok_or_fail 'sed -i "s/<pacman_lb_hostname>/${PACMAN_INGRESS}/g" yaml-resources/haproxy/haproxy'
+  run_ok_or_fail 'sed -i "s/<server1_name> <server1_pacman_route>:<route_port>/cluster1 ${PACMAN_CLUSTER1}:80/g" yaml-resources/haproxy/haproxy'
+  run_ok_or_fail 'sed -i "s/<server2_name> <server2_pacman_route>:<route_port>/cluster2 ${PACMAN_CLUSTER2}:80/g" yaml-resources/haproxy/haproxy'
+  run_ok_or_fail 'sed -i "s/<server3_name> <server3_pacman_route>:<route_port>/cluster3 ${PACMAN_CLUSTER3}:80/g" yaml-resources/haproxy/haproxy'
+  run_ok_or_fail "oc --context=feddemocl1 -n ${HAPROXY_NAMESPACE} create configmap haproxy --from-file=yaml-resources/haproxy/haproxy"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${HAPROXY_NAMESPACE} create -f yaml-resources/haproxy/haproxy-clusterip-service.yaml"
+  run_ok_or_fail "oc --context=feddemocl1 -n ${HAPROXY_NAMESPACE} create -f yaml-resources/haproxy/haproxy-deployment.yaml"
+  echo "HAProxy setup completed"
+}
+
 setup_kubefed()
 {
-  KUBEFED_NAMESPACE_ALREADY_EXISTS=$(create_kubefed_namespace)
+  KUBEFED_NAMESPACE_ALREADY_EXISTS=$(create_annotated_namespace $KUBEFED_NAMESPACE)
   if [ "0${KUBEFED_NAMESPACE_ALREADY_EXISTS}" == "01" ]
   then
     echo "${KUBEFED_NAMESPACE} namespace already exists in the cluster. We cannot proceed with the demo."
@@ -275,11 +316,9 @@ setup_kubefed()
   else
     echo "Namespace ${KUBEFED_NAMESPACE} created for deploying the KubeFed Controller in cluster scope mode."
   fi
-  echo "Creating namespace ${DEMO_NAMESPACE} for demo"
-  run_ok_or_fail "oc --context=feddemocl1 create ns ${DEMO_NAMESPACE}" "0" "1"
   download_kubefed_binary
-  echo "Deploying Federation Operator on Host Cluster in namespace ${DEMO_NAMESPACE}"
-  HOST_CLUSTER_VERSION=$(oc --context=feddemocl1 get clusterversion version -o jsonpath='{.spec.channel}' || echo "3") 
+  echo "Deploying Federation Operator on Host Cluster in namespace ${KUBEFED_NAMESPACE}"
+  HOST_CLUSTER_VERSION=$(oc --context=feddemocl1 get clusterversion version -o jsonpath='{.spec.channel}' 2>/dev/null || echo "3") 
   if [ ${HOST_CLUSTER_VERSION} == "3" ]
   then
     echo "Deploying OLM"
@@ -292,7 +331,7 @@ setup_kubefed()
     run_ok_or_fail "oc --context=feddemocl1 apply -f yaml-resources/olm/02-olm-mod.yaml" "0" "1"
     wait_for_deployment_ready "feddemocl1" "olm" "olm-operator"
     wait_for_deployment_ready "feddemocl1" "olm" "catalog-operator"
-    echo "Configuring CatalogSourceConfig and Subscription with demo data"
+    echo "Configuring Subscription with demo data"
     run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} create -f yaml-resources/olm/03-subscription-mod.yaml" "0" "1"
   else
     echo "Configuring CatalogSourceConfig and Subscription with demo data"
@@ -325,7 +364,6 @@ setup_kubefed()
   run_ok_or_fail "./bin/kubefedctl join feddemocl3 --host-cluster-context feddemocl1 --v=2" "0" "1"
   check_federated_clusters_ready
   run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} get kubefedclusters" "1" "1"
-  run_ok_or_fail "kubefedctl federate namespace ${DEMO_NAMESPACE} --host-cluster-context feddemocl1" "1" "1"
   echo "feddemocl1 - ${CLUSTER1_URL}"
   echo "feddemocl2 - ${CLUSTER2_URL}"
   echo "feddemocl3 - ${CLUSTER3_URL}"
@@ -336,9 +374,10 @@ setup_mongo_tls()
 {
   SERVICE_NAME=mongo
   NAMESPACE=${DEMO_NAMESPACE}
-  ROUTE_CLUSTER1="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER1_URL}"
-  ROUTE_CLUSTER2="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER2_URL}"
-  ROUTE_CLUSTER3="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER3_URL}"
+  ROUTE_CLUSTER1="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL1}"
+  ROUTE_CLUSTER2="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL2}"
+  ROUTE_CLUSTER3="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL3}"
+  PACMAN_INGRESS=pacman-ingress.${WILDCARD_DOMAIN_CL1}
   SANS="localhost,localhost.localdomain,127.0.0.1,${ROUTE_CLUSTER1},${ROUTE_CLUSTER2},${ROUTE_CLUSTER3},${SERVICE_NAME},${SERVICE_NAME}.${NAMESPACE},${SERVICE_NAME}.${NAMESPACE}.svc.cluster.local"
   cd ssl &> /dev/null
   echo "Downloading cfssl binary"
@@ -363,7 +402,7 @@ setup_mongo_tls()
   run_ok_or_fail 'sed -i "s/primarynodehere/${ROUTE_CLUSTER1}:443/" ../yaml-resources/mongo/04-mongo-federated-deployment-rs-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/replicamembershere/${ROUTE_CLUSTER1}:443,${ROUTE_CLUSTER2}:443,${ROUTE_CLUSTER3}:443/" ../yaml-resources/mongo/04-mongo-federated-deployment-rs-mod.yaml' "0" "1"
   echo "Crafting Pacman OCP Deployment containing mongodb endpoints"
-  run_ok_or_fail 'sed -i "s/pacmanhosthere/${PACMAN_URL}/" ../yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml' "0" "1"
+  run_ok_or_fail 'sed -i "s/pacmanhosthere/${PACMAN_INGRESS}/" ../yaml-resources/pacman/03-pacman-federated-ingress-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/primarymongohere/${ROUTE_CLUSTER1}/" ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/namespace: pacman/namespace: ${DEMO_NAMESPACE}/" ../yaml-resources/pacman/06-pacman-federated-cluster-role-binding-mod.yaml' "0" "1"
   run_ok_or_fail 'sed -i "s/replicamembershere/${ROUTE_CLUSTER1},${ROUTE_CLUSTER2},${ROUTE_CLUSTER3}/" ../yaml-resources/pacman/07-pacman-federated-deployment-rs-mod.yaml' "0" "1"
@@ -409,6 +448,27 @@ wait_for_deployment_ready()
   DEPLOYMENT_NAMESPACE="$2"
   DEPLOYMENT_NAME="$3"
   echo "Checking if deployment ${DEPLOYMENT_NAME} from namespace ${DEPLOYMENT_NAMESPACE} on cluster ${CLUSTER} is ready"
+
+  while [ $READY -eq 0 ]
+  do
+    DEPLOYMENT_EXISTS=$(oc --context=${CLUSTER} -n ${DEPLOYMENT_NAMESPACE} get deployment ${DEPLOYMENT_NAME} -o name | awk -F "/" '{print $2}')
+    if [ "0${DEPLOYMENT_NAME}" == "0${DEPLOYMENT_EXISTS}" ]
+    then
+      READY=1
+    else
+      echo "Deployment still does not exists, waiting for its creation... [$WAIT/$MAX_WAIT]"
+      sleep 5
+      WAIT=$(expr $WAIT + 5)
+    fi
+    if [ $WAIT -ge $MAX_WAIT ]
+    then
+      echo "Timeout while waiting deployment ${DEPLOYMENT_NAME} from namespace ${DEPLOYMENT_NAMESPACE} on cluster ${CLUSTER} to be created"
+      exit 1
+    fi
+  done
+
+  READY=0
+  WAIT=0
   DESIRED_REPLICAS=$(oc --context=${CLUSTER} -n ${DEPLOYMENT_NAMESPACE} get deployment ${DEPLOYMENT_NAME} -o jsonpath='{ .spec.replicas }')
   while [ $READY -eq 0 ]
   do
@@ -513,6 +573,16 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete federatedsecret mongodb-ssl" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} delete route mongo" "0" "1" "1"
   run_ok_or_fail "oc --context=feddemocl1 delete federatednamespace ${DEMO_NAMESPACE} -n ${DEMO_NAMESPACE}" "0" "1" "1"
+}
+
+haproxy_cleanup()
+{
+  echo "Deleting HAProxy"
+  run_ok_or_fail "oc --context=feddemocl1 delete namespace ${HAPROXY_NAMESPACE}" "0" "1"
+}
+
+kubefed_cleanup()
+{
   echo "Deleting Federation"
   echo "Disabling federated resources on Host Cluster (may take a while)"
   for type in namespaces ingresses.extensions secrets serviceaccounts services configmaps persistentvolumeclaims deployments.apps clusterrolebindings.rbac.authorization.k8s.io clusterroles.rbac.authorization.k8s.io
@@ -523,24 +593,34 @@ mongo_pacman_demo_cleanup()
   run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete subscription federation" "0" "1"
   echo "Deleting ClusterServiceVersion"
   run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete csv ${KUBEFED_CSV}" "0" "1"
-  echo "Deleting CatalogSourceConfig"
-  run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace delete catalogsourceconfig installed-federation-${KUBEFED_NAMESPACE}" "0" "1"
-  echo "Deleting OperatorGroup"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete operatorgroup federation" "0" "1"
-}
+  HOST_CLUSTER_VERSION=$(oc --context=feddemocl1 get clusterversion version -o jsonpath='{.spec.channel}' 2>/dev/null || echo "3") 
+  if [ ${HOST_CLUSTER_VERSION} != "3" ]
+  then
+    echo "Deleting CatalogSourceConfig"
+    run_ok_or_fail "oc --context=feddemocl1 -n openshift-marketplace delete catalogsourceconfig installed-federation-${KUBEFED_NAMESPACE}" "0" "1"
+    echo "Deleting OperatorGroup"
+    run_ok_or_fail "oc --context=feddemocl1 -n ${KUBEFED_NAMESPACE} delete operatorgroup federation" "0" "1"
+  fi
 
-namespace_kubefed_cleanup()
-{
   echo "Removing namespace from cluster"
   DELETE_KUBEFED_NS=$(delete_kubefed_namespace feddemocl1)
   if [ "0${DELETE_KUBEFED_NS}" == "01" ]
   then
     for cluster in feddemocl1 feddemocl2 feddemocl3
     do
-      run_ok_or_fail "oc --context=${cluster} delete namespace ${KUBEFED_NAMESPACE}" "0" "1"
+      run_ok_or_fail "oc --context=${cluster} delete namespace ${KUBEFED_NAMESPACE}" "0" "1" "1"
     done
   fi
-  run_ok_or_fail "oc --context=feddemocl1 delete namespace ${DEMO_NAMESPACE}" "0" "1"
+}
+
+demo_namespace_cleanup()
+{
+  DEMO_NS="$1"
+  echo "Removing demo namespace ${DEMO_NS} from clusters"
+  for cluster in feddemocl1 feddemocl2 feddemocl3
+  do
+    run_ok_or_fail "oc --context=${cluster} delete namespace ${DEMO_NS}" "0" "1" "1"
+  done
 }
 
 wait_for_input()
@@ -559,11 +639,13 @@ simulate_pacman_play()
   HOST_NAME="$4"
   SCORE_POINTS="$5"
   LEVEL="$6"
+  PACMAN_URL=pacman-multicluster.${WILDCARD_DOMAIN_CL1}
   run_ok_or_fail "curl -X POST http://${PACMAN_URL}/highscores -H 'Content-Type: application/x-www-form-urlencoded' -d 'name=${PLAYER_NAME}&cloud=${CLOUD_NAME}&zone=${ZONE_NAME}&host=${HOST_NAME}&score=${SCORE_POINTS}&level=${LEVEL}'" "0" "1" 
 }
 
 check_ci_scores()
 {
+  PACMAN_URL=pacman-multicluster.${WILDCARD_DOMAIN_CL1}
   echo "CI: Getting score list"
   SCORE_LIST=$(curl -s -X GET http://${PACMAN_URL}/highscores/list)
   echo "CI: Getting AWS Scores" 
@@ -627,13 +709,21 @@ wait_for_mongodb_replicaset()
       exit 1
     fi
   done
+  echo ""
+  echo "MongoDB ReplicaSet Status:"
+  echo "--------------------------"
+  echo "Primary Member:"
+  echo $REPLICASET_STATUS | ./bin/jq '.members[] | select(.state | contains(1)).name'
+  echo "Secondary Members:"
+  echo $REPLICASET_STATUS | ./bin/jq '.members[] | select(.state | contains(2)).name'
+  echo ""
 }
 
 check_ci_replicaset()
 {
-  MEMBER_CLUSTER1="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER1_URL}:443"
-  MEMBER_CLUSTER2="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER2_URL}:443"
-  MEMBER_CLUSTER3="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER3_URL}:443"
+  MEMBER_CLUSTER1="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL1}:443"
+  MEMBER_CLUSTER2="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL2}:443"
+  MEMBER_CLUSTER3="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL3}:443"
   MONGO_POD_CL1=$(oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pod --selector="name=mongo" --output=jsonpath='{.items..metadata.name}')
   REPLICASET_STATUS=$(oc --context=feddemocl1 -n ${DEMO_NAMESPACE} exec $MONGO_POD_CL1 -- bash -c 'mongo --norc --quiet --username=admin --password=$MONGODB_ADMIN_PASSWORD --host localhost admin --tls --tlsCAFile /opt/mongo-ssl/ca.pem --eval "JSON.stringify(rs.status())"')
   echo "CI: Getting MongoDB Replica Status on 1st Cluster"
@@ -694,9 +784,14 @@ check_ci_replicaset()
 
 mongo_pacman_demo()
 {
-  ROUTE_CLUSTER1="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER1_URL}"
-  ROUTE_CLUSTER2="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER2_URL}"
-  ROUTE_CLUSTER3="mongo-${DEMO_NAMESPACE}.apps.${CLUSTER3_URL}"
+  ROUTE_CLUSTER1="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL1}"
+  ROUTE_CLUSTER2="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL2}"
+  ROUTE_CLUSTER3="mongo-${DEMO_NAMESPACE}.${WILDCARD_DOMAIN_CL3}"
+  PACMAN_URL=pacman-multicluster.${WILDCARD_DOMAIN_CL1}
+  echo "Creating namespace ${DEMO_NAMESPACE} for demo"
+  run_ok_or_fail "oc --context=feddemocl1 create ns ${DEMO_NAMESPACE}" "0" "1"
+  echo "Federating the namespace ${DEMO_NAMESPACE}"
+  run_ok_or_fail "./bin/kubefedctl federate namespace ${DEMO_NAMESPACE} --host-cluster-context feddemocl1" "1" "0"
   echo "1. At this point we have the "${DEMO_NAMESPACE}" Namespace across three different clusters (Cluster1, Cluster2 and Cluster3)" 
   run_ok_or_fail 'for cluster in feddemocl1 feddemocl2 feddemocl3;do echo **Cluster ${cluster}**;oc --context=$cluster get namespaces ${DEMO_NAMESPACE};done' "1" "1"
   echo "2. A federatedSecret will be created across the federated clusters, the secrets include the certificates and user/password details"
@@ -732,7 +827,6 @@ mongo_pacman_demo()
   MONGO_POD=$(oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pod --selector="name=mongo" --output=jsonpath='{.items..metadata.name}')
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} label pod $MONGO_POD replicaset=primary" "0" "1"
   wait_for_mongodb_replicaset "feddemocl1" "${DEMO_NAMESPACE}" "3"
-  oc --context=feddemocl1 -n ${DEMO_NAMESPACE} exec $MONGO_POD -- bash -c 'mongo --norc --quiet --username=admin --password=$MONGODB_ADMIN_PASSWORD --host localhost admin --tls --tlsCAFile /opt/mongo-ssl/ca.pem --eval "rs.status()"'
   echo "8. Now we are going to deploy Pacman and connect it to the MongoDB Replicaset. Let's start creating a federatedsecret to store the database connection details"
   wait_for_input
   run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} create -f yaml-resources/pacman/01-mongo-federated-secret.yaml" "0" "1"
@@ -807,7 +901,6 @@ mongo_pacman_demo()
   echo "21. Bonus track: We should see our MongoDB Replica being restored"
   wait_for_deployment_ready "feddemocl1" "${DEMO_NAMESPACE}" "mongo"
   wait_for_mongodb_replicaset "feddemocl1" "${DEMO_NAMESPACE}" "3"
-  run_ok_or_fail "oc --context=feddemocl1 -n ${DEMO_NAMESPACE} get pods -o name --selector='name=mongo' | xargs oc --context=feddemocl1 -n ${DEMO_NAMESPACE} logs" "1" "1"
   if [ $CI_MODE -eq 1 ]
   then
     sleep 3
@@ -844,6 +937,7 @@ check_steps()
   STEPS_TO_RUN=$1
   RUN_CONTEXT_CREATION=0
   RUN_SETUP_KUBEFED=0
+  RUN_SETUP_HAPROXY=0
   RUN_SETUP_MONGO=0
   RUN_DEMO_ONLY=0
   for STEP_TO_CHECK in $(echo $STEPS_TO_RUN | sed "s/,/ /g")
@@ -854,21 +948,26 @@ check_steps()
     elif [ "$STEP_TO_CHECK" == "setup-kubefed" ]
     then
       RUN_SETUP_KUBEFED=1
+    elif [ "$STEP_TO_CHECK" == "setup-haproxy" ]
+    then
+      RUN_SETUP_HAPROXY=1
     elif [ "$STEP_TO_CHECK" == "setup-mongo-tls" ]
     then
       RUN_SETUP_MONGO=1
     elif [ "$STEP_TO_CHECK" == "demo-only" ]
     then
+      RUN_CONTEXT_CREATION=1
       RUN_DEMO_ONLY=1
     elif [ "$STEP_TO_CHECK" == "all" ]
     then
       RUN_CONTEXT_CREATION=1
       RUN_SETUP_KUBEFED=1
+      RUN_SETUP_HAPROXY=1
       RUN_SETUP_MONGO=1
       RUN_DEMO_ONLY=1
       break
     else
-      echo "Invalid step $STEP_TO_CHECK, valid steps: [context-creation|setup-kubefed|setup-mongo-tls|demo-only]"
+      echo "Invalid step $STEP_TO_CHECK, valid steps: [context-creation|setup-kubefed|setup-haproxy|setup-mongo-tls|demo-only]"
       exit 1
     fi
   done
@@ -889,11 +988,18 @@ main()
       context_creation "feddemocl1" ${CLUSTER1_API_URL} ${CLUSTER1_ADMIN} ${CLUSTER1_ADMIN_PWD} 
       context_creation "feddemocl2" ${CLUSTER2_API_URL} ${CLUSTER2_ADMIN} ${CLUSTER2_ADMIN_PWD} 
       context_creation "feddemocl3" ${CLUSTER3_API_URL} ${CLUSTER3_ADMIN} ${CLUSTER3_ADMIN_PWD} 
+      echo "We are going to get the cluster wildcard domains"
+      get_clusters_wilcard_domain
     fi
     if [ $RUN_SETUP_KUBEFED -eq 1 ]
     then
       echo -ne "\n\n\nNow it's time to deploy Kubefed\n"
       setup_kubefed
+    fi
+    if [ $RUN_SETUP_HAPROXY -eq 1 ]
+    then
+      echo -ne "\n\n\nAn HAProxy LB will be deployed in order to provide GlobalIngress for Pacman"
+      setup_haproxy
     fi
     if [ $RUN_SETUP_MONGO -eq 1 ]
     then
@@ -925,10 +1031,16 @@ main()
       then
         echo "Cleaning up demo resources"
         mongo_pacman_demo_cleanup
+        demo_namespace_cleanup ${DEMO_NAMESPACE}
       fi
       if [ "$MODE" == "full-cleanup" ]
       then
-        namespace_kubefed_cleanup
+        kubefed_cleanup
+        haproxy_cleanup
+      fi
+      if [[ "$MODE" == "demo-cleanup" || "$MODE" == "full-cleanup" ]]
+      then
+        echo "Cleanup completed"
       fi
     fi
   fi
