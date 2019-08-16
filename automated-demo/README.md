@@ -6,9 +6,7 @@ This demo is intended to be used during KubeFed presentations.
 
 * oc tool installed on your local machine
 * git and openssl commands available on your local machine
-* 3 existing OCP 4.1 clusters and a user with admin access
-* An existing DNS record for the pacman load balancer
-* A pacman loadbalancer deployed and loadbalancing traffic across the three different clusters [1]
+* 3 existing OCP 4.1/3.11 clusters and a user with admin access
 
 ## How-to
 
@@ -29,14 +27,13 @@ The `inventory.json` files requires the following information:
 * cluster3.ocp_version - Cluster3 OCP Version. e.g: 4
 * cluster3.admin_user - Cluster 3 admin user. e.g: kubeadmin
 * cluster3.admin_password - Cluster 3 admin password. e.g: ver1secur3
-* pacman_lb_url - The DNS record configured to point to our Pacman Load Balancer. e.g: pacman.example.com
 
 ## auto-demo options
 
 The script has three execution modes: `demo` (default), `demo-cleanup` and `full-cleanup`.
 
   * The `demo` mode will go through all the required steps to run the demo from beggining to end
-  * The `demo-cleanup` mode will delete the demo resources while preserving the kubefed bits
+  * The `demo-cleanup` mode will delete the demo resources while preserving the KubeFed and HAProxy bits
   * The `full-cleanup` mode will delete the demo resources and the federation bits (including the namespace where it was deployed)
 
 On top of that the script allows the user to select which steps will be executed.
@@ -53,5 +50,3 @@ The script has a help command integrated which will tell you the supported execu
 ```
 ./auto-demo.sh -h
 ```
-
-[1] For information about configuring HaProxy visit [this readme](./deploy-haproxy.md)
