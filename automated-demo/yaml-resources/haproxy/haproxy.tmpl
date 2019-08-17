@@ -34,9 +34,6 @@ global
     pidfile     /var/lib/haproxy/haproxy.pid
     maxconn     4000
 
-    # turn on stats unix socket
-    stats socket /var/lib/haproxy/stats
-
 #---------------------------------------------------------------------
 # common defaults that all the 'listen' and 'backend' sections will
 # use if not designated in their block

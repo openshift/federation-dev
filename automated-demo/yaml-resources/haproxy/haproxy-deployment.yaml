@@ -15,7 +15,7 @@ spec:
         app: haproxy-lb
     spec:
       containers:
-      - image: registry.connect.redhat.com/haproxytech/haproxy:latest
+      - image: haproxytech/haproxy-alpine:2.0.4
         imagePullPolicy: Always
         name: haproxy
         ports:
