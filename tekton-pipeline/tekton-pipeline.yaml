@@ -32,8 +32,6 @@ spec:
       - build
     resources:
       inputs:
-      - name: source
-        resource: app-git
       - name: app-image
         resource: app-image
     params:

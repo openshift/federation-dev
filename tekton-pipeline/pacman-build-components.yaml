@@ -7,7 +7,7 @@ spec:
   type: image
   params:
   - name: url
-    value: quay.io/rcook/pacman-nodejs-app-pipeline:v0.0.1
+    value: quay.io/rcook/pacman-nodejs-app-pipeline:v0.0.2
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
