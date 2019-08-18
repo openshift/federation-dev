@@ -124,15 +124,15 @@ get_data_from_user()
   CLUSTER3_API_URL="https://api.${CLUSTER3_URL}:6443"
   if [ "0$CLUSTER1_VERSION" == "03" ]
   then
-    CLUSTER1_API_URL="https://console.${CLUSTER1_URL}:8443"
+    CLUSTER1_API_URL="https://${OPENSHIFT_CONSOLE}.${CLUSTER1_URL}:${OPENSHIFT_PORT}"
   fi
   if [ "0$CLUSTER2_VERSION" == "03" ]
   then
-    CLUSTER2_API_URL="https://console.${CLUSTER2_URL}:8443"
+    CLUSTER2_API_URL="https://${OPENSHIFT_CONSOLE}.${CLUSTER2_URL}:${OPENSHIFT_PORT}"
   fi
   if [ "0$CLUSTER3_VERSION" == "03" ]
   then
-    CLUSTER3_API_URL="https://console.${CLUSTER3_URL}:8443"
+    CLUSTER3_API_URL="https://${OPENSHIFT_CONSOLE}.${CLUSTER3_URL}:${OPENSHIFT_PORT}"
   fi
   echo "--------------------"
   echo "Input data"
@@ -156,15 +156,15 @@ get_data_from_inventory()
   CLUSTER3_API_URL="https://api.${CLUSTER3_URL}:6443"
   if [ "0$CLUSTER1_VERSION" == "03" ]
   then
-    CLUSTER1_API_URL="https://console.${CLUSTER1_URL}:8443"
+    CLUSTER1_API_URL="https://${OPENSHIFT_CONSOLE}.${CLUSTER1_URL}:${OPENSHIFT_PORT}"
   fi
   if [ "0$CLUSTER2_VERSION" == "03" ]
   then
-    CLUSTER2_API_URL="https://console.${CLUSTER2_URL}:8443"
+    CLUSTER2_API_URL="https://${OPENSHIFT_CONSOLE}.${CLUSTER2_URL}:${OPENSHIFT_PORT}"
   fi
   if [ "0$CLUSTER3_VERSION" == "03" ]
   then
-    CLUSTER3_API_URL="https://console.${CLUSTER3_URL}:8443"
+    CLUSTER3_API_URL="https://${OPENSHIFT_CONSOLE}.${CLUSTER3_URL}:${OPENSHIFT_PORT}"
   fi
   ADMIN_USER=$(./bin/jq -r '.admin_user' $INVENTORY)
   CLUSTER1_ADMIN=$(./bin/jq -r '.cluster1.admin_user' $INVENTORY)
@@ -1075,5 +1075,7 @@ STEPS=${STEPS:="all"}
 MODE=${MODE:="demo"}
 CI_MODE=${CI_MODE:="0"}
 DEMO_NAMESPACE=${DEMO_NAMESPACE:="federation-demo"}
+OPENSHIFT_CONSOLE=${OPENSHIFT_CONSOLE:="openshift-master"}
+OPENSHIFT_PORT=${OPENSHIFT_PORT:="8443"}
 
 main
