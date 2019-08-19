@@ -6,3 +6,7 @@ rules:
 - apiGroups: ["types.kubefed.k8s.io"]
   resources: ["federateddeployments", "federatedservices", "federateddeploymentconfig"]
   verbs: ["get", "list", "create", "update", "patch", "delete"]
+- apiGroups: ["security.openshift.io"]
+  resourceNames: ["privileged"]
+  resources: ["securitycontextconstraints"]
+  verbs: ["use"]
