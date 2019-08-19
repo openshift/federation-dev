@@ -159,4 +159,4 @@ spec:
     subjects:
     - kind: ServiceAccount
       name: pacman
-      namespace: tekton-demo
+      namespace: pipeline-demo

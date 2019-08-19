@@ -5,6 +5,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: pipeline
+  namespace: pipeline-demo
 roleRef:
   kind: Role
   name: pipeline-role
