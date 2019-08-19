@@ -7,6 +7,8 @@ If you are reading this, probably you are curious enough to understand how we co
 Keep in mind the solution used here is far from perfect, and we have used what the environment offered to us in order to
 make it easy for you to get global ingress in the lab.
 
+In a production scenario, a global load balancer service would be used. This global load balancer could either be provided
+by F5, CloudFlare or other 3rd party solutions.
 
 ## Environment Details
 
