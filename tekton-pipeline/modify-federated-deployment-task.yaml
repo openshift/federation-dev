@@ -5,10 +5,10 @@ metadata:
 spec:
   inputs:
     resources:
-      - name: app-image
-        type: image
     params:
       - name: deployment
+        type: string
+      - name: app-image
         type: string
   steps:
     - name: pull-file
@@ -22,7 +22,7 @@ spec:
       command: ["sed"]
       args:
         - "-i"
-        - "s;image:.*;image: ${inputs.resources.app-image.url};g"
+        - "s;image:.*;image: ${inputs.params.app-image.url};g"
         - "federateddeployment.yaml"
     - name: deploy
       image: registry.redhat.io/openshift4/ose-cli-artifacts:latest
