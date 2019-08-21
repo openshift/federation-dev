@@ -20,6 +20,8 @@ spec:
         default: "true"
         description: The location of the path to run s2i from.
         default: .
+      - name: version
+        type: string
   steps:
     - name: generate
       image: quay.io/openshift-pipeline/s2i
@@ -31,7 +33,7 @@ spec:
     - name: build
       image: quay.io/buildah/stable
       workingdir: /gen-source
-      command: ['buildah', 'bud', '--tls-verify=${inputs.params.TLSVERIFY}', '--layers', '-f', '/gen-source/Dockerfile.gen', '-t', '${inputs.resources.app-image.url}', '.']
+      command: ['buildah', 'bud', '--tls-verify=${inputs.params.TLSVERIFY}', '--layers', '-f', '/gen-source/Dockerfile.gen', '-t', '${inputs.resources.app-image.url}:${inputs.params.version}', '.']
       volumeMounts:
         - name: varlibcontainers
           mountPath: /var/lib/containers
@@ -41,7 +43,7 @@ spec:
         privileged: true
     - name: push
       image: quay.io/buildah/stable
-      command: ['buildah', 'push', '--tls-verify=${inputs.params.TLSVERIFY}', '${inputs.resources.app-image.url}', 'docker://${inputs.resources.app-image.url}']
+      command: ['buildah', 'push', '--tls-verify=${inputs.params.TLSVERIFY}', '${inputs.resources.app-image.url}:${inputs.params.version}', 'docker://${inputs.resources.app-image.url}${inputs.params.version}']
       volumeMounts:
         - name: varlibcontainers
           mountPath: /var/lib/containers

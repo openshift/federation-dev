@@ -3,12 +3,15 @@ kind: Task
 metadata:
   name: modify-federated-deployment
 spec:
+spec:
   inputs:
     resources:
+      - name: app-image
+        type: image
     params:
       - name: deployment
         type: string
-      - name: app-image
+      - name: version
         type: string
   steps:
     - name: pull-file
@@ -22,7 +25,7 @@ spec:
       command: ["sed"]
       args:
         - "-i"
-        - "s;image:.*;image: ${inputs.params.app-image.url};g"
+        - "s;image:.*;image: ${inputs.resources.app-image.url}:${inputs.params.version};g"
         - "federateddeployment.yaml"
     - name: deploy
       image: registry.redhat.io/openshift4/ose-cli-artifacts:latest

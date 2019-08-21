@@ -17,6 +17,8 @@ spec:
     params:
       - name: TLSVERIFY
         value: "false"
+      - name: version
+        resource: version
     resources:
       inputs:
       - name: source
@@ -32,8 +34,10 @@ spec:
       - build
     resources:
       inputs:
+      - name: app-image
+        resource: app-image
     params:
       - name: deployment
         resource: deployment
-      - name: app-image
-        resource: app-image
+      - name: version
+        resource: version
