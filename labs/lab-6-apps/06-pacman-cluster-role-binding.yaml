@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pacman
+  namespace: pacman 
+subjects:
+- kind: ServiceAccount 
+  name: pacman
+  namespace: pacman
+roleRef:
+  kind: ClusterRole
+  name: pacman 
+  apiGroup: rbac.authorization.k8s.io

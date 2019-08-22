@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: pacman
+  name: pacman
+  namespace: pacman 
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    name: pacman
+  sessionAffinity: None
+  type: ClusterIP
