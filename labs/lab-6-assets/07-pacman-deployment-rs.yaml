@@ -16,7 +16,6 @@ spec:
         name: pacman
     spec:
       serviceAccount: pacman
-      imagePullPolicy: Always
       containers:
       - image: quay.io/ifont/pacman-nodejs-app:latest
         name: pacman
