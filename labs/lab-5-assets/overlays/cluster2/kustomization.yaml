@@ -1,6 +1,5 @@
 namePrefix: cluster2-
 commonLabels:
-  variant: cluste2 
   org: RHTE
 commonAnnotations:
   note: Hello, I am cluster2!
