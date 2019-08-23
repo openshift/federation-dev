@@ -29,6 +29,5 @@ In order to get started with the lab, click on **Lab 0 - Introduction**.
 * [Lab 6 - Deploying Pacman](./6.md)<br>
 * [Lab 7 - Application Portability](./7.md)<br>
 * [Lab 8 - Convert a Namespace to a Federated Namespace](./8.md)<br>
-* [Lab 9 - Replica Scheduling](./9.md)<br>
-* [Lab 10 - Disaster Recovery](./10.md)<br>
-* [Lab 11 - Wrap up](./11.md)<br>
+* [Lab 9 - Disaster Recovery](./10.md)<br>
+* [Lab 10 - Wrap up](./11.md)<br>
