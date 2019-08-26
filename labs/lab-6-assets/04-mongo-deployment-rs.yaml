@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     name: mongo
-  name: httpd
+  name: mongo
   namespace: mongo
 spec:
   replicas: 1
