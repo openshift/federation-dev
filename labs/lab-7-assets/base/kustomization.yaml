@@ -1,4 +1,2 @@
 resources:
-- deployment.yaml
-- service.yaml
-- configMap.yaml
+- 07-pacman-deployment-rs.yaml
