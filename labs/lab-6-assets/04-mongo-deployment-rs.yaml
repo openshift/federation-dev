@@ -46,6 +46,8 @@ spec:
             secretKeyRef:
               key: keyfile-value
               name: mongodb-secret
+        - mountPath: /var/tmp/podinfo
+          name: pod-info
         - name: MONGODB_REPLICA_NAME
           value: "rs0"
         - name: PRIMARY_NODE
@@ -64,3 +66,9 @@ spec:
       - name: mongodb-ssl
         secret:
           secretName: mongodb-ssl
+      - name: pod-info
+        downwardAPI:
+          items:
+          - path: "labels"
+            fieldRef:
+              fieldPath: metadata.labels
