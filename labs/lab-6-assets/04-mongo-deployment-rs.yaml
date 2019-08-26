@@ -72,4 +72,3 @@ spec:
           - path: "labels"
             fieldRef:
               fieldPath: metadata.labels
-          type: array
