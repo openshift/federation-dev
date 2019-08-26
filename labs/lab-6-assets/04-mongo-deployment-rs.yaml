@@ -57,8 +57,6 @@ spec:
           name: mongodb-data
         - mountPath: /opt/mongo-ssl/
           name: mongodb-ssl
-        - mountPath: /var/tmp/podinfo
-          name: pod-info
       volumes:
       - name: mongodb-data
         persistentVolumeClaim:
@@ -66,9 +64,3 @@ spec:
       - name: mongodb-ssl
         secret:
           secretName: mongodb-ssl
-      - name: pod-info
-        downwardAPI:
-          items:
-          - path: "labels"
-            fieldRef:
-              fieldPath: metadata.labels
