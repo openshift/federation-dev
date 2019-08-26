@@ -1,5 +1,3 @@
-namePrefix:
-  web-site-
 resources:
 - deployment.yaml
 - service.yaml

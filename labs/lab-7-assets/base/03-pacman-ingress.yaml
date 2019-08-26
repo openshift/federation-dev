@@ -5,7 +5,7 @@ metadata:
   namespace: pacman
 spec:
   rules:
-  - host: pacman.sysdeseng.com
+  - host: pacmanhosthere
     http:
       paths:
       - path: /
