@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: pacman
+  name: pacman
+  namespace: pacman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: pacman
+  template:
+    metadata:
+      labels:
+        name: pacman
+    spec:
+      serviceAccount: pacman
+      containers:
+      - image: quay.io/ifont/pacman-nodejs-app:latest
+        name: pacman
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MONGO_SERVICE_HOST
+          # Single member MongoDB
+          # value: primarymongohere
+          # Replicaset (federated) MongoDB
+          value: replicamembershere
+          # Comment out MONGO_REPLICA_SET for the single-member Mongo
+        - name: MONGO_REPLICA_SET
+          value: rs0
+        - name: MONGO_AUTH_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mongodb-users-secret
+        - name: MONGO_AUTH_PWD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mongodb-users-secret
+        - name: MONGO_DATABASE
+          value: pacman
+        - name: MY_MONGO_PORT
+          value: "443"
+        - name: MONGO_USE_SSL
+          value: "true"
+        - name: MONGO_VALIDATE_SSL
+          value: "false"
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName

@@ -1,0 +1,14 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: pacman 
+  namespace: pacman
+spec:
+  rules:
+  - host: pacman.sysdeseng.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: pacman 
+          servicePort: 80

@@ -1,0 +1,10 @@
+namePrefix: cluster2-
+commonLabels:
+  org: RHTE
+commonAnnotations:
+  note: Hello, I am cluster2!
+bases:
+- ../../base
+patchesStrategicMerge:
+- map.yaml
+- deployment.yaml

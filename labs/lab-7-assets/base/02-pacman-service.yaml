@@ -2,15 +2,15 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    name: reverse-words
-  name: reverse-words
-  namespace: reverse-words
+    name: pacman
+  name: pacman
+  namespace: pacman 
 spec:
   ports:
-  - port: 8080
+  - port: 80
     protocol: TCP
     targetPort: 8080
   selector:
-    name: reverse-words
+    name: pacman
   sessionAffinity: None
   type: ClusterIP

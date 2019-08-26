@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: mongo
+  name: mongo
+  namespace: mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: mongo
+  template:
+    metadata:
+      labels:
+        name: mongo
+    spec:
+      containers:
+      - image: quay.io/mavazque/mongodb:autors2 
+        name: mongo
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGODB_USER
+          valueFrom:
+            secretKeyRef:
+              key: database-user
+              name: mongodb-secret
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-password
+              name: mongodb-secret
+        - name: MONGODB_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: database-admin-password
+              name: mongodb-secret
+        - name: MONGODB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              key: database-name
+              name: mongodb-secret
+        - name: MONGODB_KEYFILE_VALUE
+          valueFrom:
+            secretKeyRef:
+              key: keyfile-value
+              name: mongodb-secret
+        - name: MONGODB_REPLICA_NAME
+          value: "rs0"
+        - name: PRIMARY_NODE
+          value: "primarynodehere"
+        - name: REPLICA_MEMBERS
+          value: "replicamembershere"
+        volumeMounts:
+        - mountPath: /data/db
+          name: mongodb-data
+        - mountPath: /opt/mongo-ssl/
+          name: mongodb-ssl
+        - mountPath: /var/tmp/podinfo
+          name: pod-info
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: mongo
+      - name: mongodb-ssl
+        secret:
+          secretName: mongodb-ssl
+      - name: pod-info
+        downwardAPI:
+          items:
+          - path: "labels"
+            fieldRef:
+              fieldPath: metadata.labels
