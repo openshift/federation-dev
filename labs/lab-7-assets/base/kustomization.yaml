@@ -1,2 +1,8 @@
 resources:
+- 01-pacman-secret.yaml
+- 02-pacman-service.yaml
+- 03-pacman-ingress.yaml
+- 04-pacman-service-account.yaml
+- 05-pacman-cluster-role.yaml
+- 06-pacman-cluster-role-binding.yaml
 - 07-pacman-deployment-rs.yaml
