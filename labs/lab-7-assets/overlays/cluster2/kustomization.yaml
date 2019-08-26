@@ -1,2 +1,4 @@
 bases:
 - ../../base
+patchesStrategicMerge:
+- 07-pacman-deployment-rs.yaml
