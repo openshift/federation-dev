@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: cluster2-pacman 
+  namespace: argocd
 spec:
   destination:
     namespace: pacman

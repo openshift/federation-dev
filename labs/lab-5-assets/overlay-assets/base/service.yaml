@@ -2,6 +2,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: the-service
+  namespace: web-app
 spec:
   selector:
     deployment: hello
