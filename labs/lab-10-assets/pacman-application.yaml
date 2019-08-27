@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster2-pacman 
+spec:
+  destination:
+    namespace: pacman
+    server: server
+  source:
+    path: labs/lab-7-assets/overlays/cluster2
+    repoURL: repo 
+    targetRevision: master
+  project: default
+  syncPolicy:
+    automated:
+      prune: false
