@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: the-map
+  namespace: dev-web-site
 data:
   altGreeting: "Good Morning!"
   enableRisky: "false"
