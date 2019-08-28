@@ -1,7 +1,6 @@
 resources:
 - pacman-secret.yaml
 - pacman-service.yaml
-- pacman-ingress.yaml
 - pacman-service-account.yaml
 - pacman-cluster-role.yaml
 - pacman-cluster-role-binding.yaml

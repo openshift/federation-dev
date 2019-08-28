@@ -13,4 +13,4 @@ spec:
   selector:
     name: pacman
   sessionAffinity: None
-  type: ClusterIP
+  type: LoadBalancer
