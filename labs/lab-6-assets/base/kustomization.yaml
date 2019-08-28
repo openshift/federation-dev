@@ -1,0 +1,7 @@
+resources:
+- mongo-pvc.yaml
+- mongo-rs-deployment.yaml
+- mongo-secret.yaml
+- mongo-service.yaml
+- mongo-route.yaml
+- namespace.yaml

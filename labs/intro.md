@@ -52,8 +52,6 @@ From the drop down list:
 4. Click submit
 5. Save the information on screen
 
-> NOTE: If any issues occur after hitting submit do not close the tab.
-
 ## Lab Environment Overview
 
 > **NOTE:** If you cannot see the diagram properly, you can click on it and it will open full-size.
