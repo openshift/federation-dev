@@ -1,0 +1,9 @@
+# Ignore everything in this directory
+*
+# Except these files
+!.gitignore
+!mongo-secret.yaml
+!mongo-service.yaml
+!mongo-pvc.yaml
+!mongo-deployment-rs.yaml
+!namespace.yaml
