@@ -2,5 +2,5 @@
 *
 # Except these files
 !.gitignore
-!base
-!overlays
+!base/
+!overlays/
