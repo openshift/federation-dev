@@ -15,7 +15,7 @@ You will be using some helper scripts during the labs, below a reference table:
 | namespace-cleanup         | Deletes everything inside the namespace sent as parameter and the namespace itself from all clusters   | Only if you need to start a lab from scratch |
 | wait-for-deployment       | Waits until a given deployment in a given cluster and namespace is ready (all replicas up and running) | When required by instructions                |
 | wait-for-mongo-replicaset | Waits until the MongoDB ReplicaSet is configured in a given cluster and namespace                      | When required by instructions                |
-| argocd-add-clusters       | Adds all clusters to ArgoCD using a workaround to avoid colliding secrets error                        | When required by instructions                |
+| argocd-add-clusters       | Adds all clusters to Argo CD using a workaround to avoid colliding secrets error                       | When required by instructions                |
 
 In order to get started with the lab, click on **Lab 0 - Introduction**.
 
@@ -24,7 +24,7 @@ In order to get started with the lab, click on **Lab 0 - Introduction**.
 * [Lab 0 - Introduction](./intro.md)<br>
 * [Lab 1 - Prerequisites](./1.md)<br>
 * [Lab 2 - Login into OpenShift Clusters and Configure Context](./2.md)<br>
-* [Lab 3 - Argo CD Introduction](./3.md)<br>
+* [Lab 3 - GitOps Introduction](./3.md)<br>
 * [Lab 4 - Deploying and Managing a Project with GitOps](./4.md)<br>
 * [Lab 5 - Deploying MongoDB](./5.md)<br>
 * [Lab 6 - Deploying Pacman](./6.md)<br>
