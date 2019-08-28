@@ -1,4 +1,3 @@
-namePrefix: cluster2-
 commonLabels:
   org: RHTE
 commonAnnotations:
