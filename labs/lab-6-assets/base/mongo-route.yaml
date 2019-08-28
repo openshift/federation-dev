@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: Validate=false
 spec:
-  host: mongocluster1route
+  host: placeholder
   port:
     targetPort: 27017
   tls:

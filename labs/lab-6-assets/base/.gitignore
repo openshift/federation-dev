@@ -6,5 +6,6 @@
 !mongo-service.yaml
 !mongo-pvc.yaml
 !mongo-rs-deployment.yaml
+!mongo-route.yaml
 !namespace.yaml
 !kustomization.yaml

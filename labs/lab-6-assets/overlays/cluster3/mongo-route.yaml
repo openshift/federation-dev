@@ -3,6 +3,8 @@ kind: Route
 metadata:
   name: mongo
   namespace: mongo
+  annotations:
+    argocd.argoproj.io/sync-options: Validate=false
 spec:
   host: mongocluster3route
   port:
