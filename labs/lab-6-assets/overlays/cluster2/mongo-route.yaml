@@ -4,4 +4,4 @@ metadata:
   name: mongo
   namespace: mongo
 spec:
-  host: mongocluster2route
+  host: mongo-east2.apps.east-2.sysdeseng.com
