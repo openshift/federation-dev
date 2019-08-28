@@ -1,0 +1,18 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mongo
+  namespace: mongo
+spec:
+  host: placeholder
+  port:
+    targetPort: 27017
+  tls:
+    insecureEdgeTerminationPolicy: Redirect
+    termination: passthrough
+  to:
+    kind: Service
+    name: mongo
+    weight: 100
+status:
+  ingress: []

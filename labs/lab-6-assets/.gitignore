@@ -1,9 +1,6 @@
-# Ignore everything in this directory
-*
-# Except these files
-!.gitignore
-!01-mongo-secret.yaml
-!02-mongo-service.yaml
-!03-mongo-pvc.yaml
-!04-mongo-deployment-rs.yaml
-!namespace.yaml
+ca-config.json
+ca-csr.json
+mongodb-csr.json
+mongodb-key.pem
+mongodb.pem
+mongo.pem
