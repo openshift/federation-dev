@@ -5,3 +5,4 @@ resources:
 - pacman-cluster-role.yaml
 - pacman-cluster-role-binding.yaml
 - pacman-deployment.yaml
+- pacman-namespace.yaml
