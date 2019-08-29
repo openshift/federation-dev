@@ -17,6 +17,7 @@ You will be using some helper scripts during the labs, below a reference table:
 | wait-for-mongo-replicaset | Waits until the MongoDB ReplicaSet is configured in a given cluster and namespace                      | When required by instructions                |
 | wait-for-argo-app         | Waits until a give Argo application is reported as healthy                                             | When required by instructions                |
 | argocd-add-clusters       | Adds all clusters to Argo CD using a workaround to avoid colliding secrets error                       | When required by instructions                |
+| verify-contexts           | Verifies contexts cluster1, cluster2 and cluster3 are created and they work as expected                | When required by instructions                |
 
 
 In order to get started with the lab, click on **Lab 0 - Introduction**.
