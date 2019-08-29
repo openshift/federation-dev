@@ -5,8 +5,8 @@ metadata:
 spec:
   selector:
     deployment: hello
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - protocol: TCP
-    port: 8666
+    port: 8080
     targetPort: 8080
