@@ -2,12 +2,11 @@ kind: Service
 apiVersion: v1
 metadata:
   name: the-service
-  namespace: dev-web-site
 spec:
   selector:
     deployment: hello
-  type: LoadBalancer
+  type: ClusterIP
   ports:
   - protocol: TCP
-    port: 8666
+    port: 8080
     targetPort: 8080
