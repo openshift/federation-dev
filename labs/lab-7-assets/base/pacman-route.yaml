@@ -6,7 +6,7 @@ metadata:
 spec:
   host: pacmanhosthere
   port:
-    targetPort: 80
+    targetPort: 8080
   to:
     kind: Service
     name: pacman
