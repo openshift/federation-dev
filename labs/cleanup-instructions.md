@@ -1,39 +1,31 @@
 <a id="markdown-clean-up-4" name="clean-up-4"></a>
 
 # Lab 4 Clean up
-To clean up the test application and namespace run:
+To clean up the test application run:
 
 ~~~sh
-namespace-cleanup -n test-namespace
-~~~
-
-<a id="markdown-clean-up-5" name="clean-up-5"></a>
-
-# Lab 5 Clean Up
-To clean up the MongoDB application and namespace run:
-
-~~~sh
-namespace-cleanup -n mongo
+argocd app delete rhte-simple-app
 ~~~
 
 <a id="markdown-clean-up-6" name="clean-up-6"></a>
 
 # Lab 6 Clean Up
-To clean up the HAProxy application and namespace run:
+To clean up the MongoDB Application run:
+
+~~~sh
+argocd app delete cluster1-mongo
+argocd app delete cluster2-mongo
+argocd app delete cluster3-mongo
+~~~
+
+<a id="markdown-clean-up-7" name="clean-up-7"></a>
+
+# Lab 7 Clean Up
+To clean up the HAProxy LB and Pacman Application run:
 
 ~~~sh
 namespace-cleanup -n haproxy-lb
-~~~
-
-To clean up the Pacman application and namespace run:
-
-~~~sh
-namespace-cleanup -n pacman
-~~~
-
-# Lab 8 Clean Up
-To clean up the Reverse Words application and namespace run:
-
-~~~sh
-namespace-cleanup -n reverse-words
+argocd app delete cluster1-pacman
+argocd app delete cluster2-pacman
+argocd app delete cluster3-pacman
 ~~~

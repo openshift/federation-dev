@@ -18,13 +18,12 @@ The clusters can be deployed using the [developer preview on AWS](https://cloud.
 
 The following tools are used during the labs and must be present in the system used by the student to interact with the clusters.
 
-* kubefedctl
+* argocd
     
     ```sh
-    curl -LOs https://github.com/kubernetes-sigs/kubefed/releases/download/v0.1.0-rc4/kubefedctl-0.1.0-rc4-linux-amd64.tgz
-    tar xzf kubefedctl-0.1.0-rc4-linux-amd64.tgz -C /usr/local/bin/
-    chmod +x /usr/local/bin/kubefedctl
-    rm -f kubefedctl.tgz
+    curl -LOs https://github.com/argoproj/argo-cd/releases/download/v1.0.2/argocd-linux-amd64
+    mv argocd-linux-amd64 /usr/local/bin/argocd
+    chmod +x /usr/local/bin/argocd
     ```
 * cfssl
 
@@ -41,76 +40,20 @@ The following tools are used during the labs and must be present in the system u
     chmod +x /usr/local/bin/cfssljson
     ```
 
-## Deploy KubeFed Operator
+## Deploy ArgoCD
 
-KubeFed Operator will be deployed to the first cluster, the following steps must be run **only** in one of the clusters as cluster admin.
+Argo CD Server needs to be deployed to the first cluster.
 
-1. Create the `kube-federation-system` namespace
-    
-    ```sh
-    oc create ns kube-federation-system
-    ```
-2. Create the `CatalogSourceConfig`
+Steps to deploy Argo CD can be found in [this AgnosticD role](https://github.com/redhat-cop/agnosticd/tree/development/ansible/roles/ocp4-workload-rhte-kubefed-app-portability)
 
-    ```sh
-    cat <<-EOF | oc apply -f -
-    ---
-    apiVersion: operators.coreos.com/v1
-    kind: CatalogSourceConfig
-    metadata:
-      name: installed-kubefed-kube-federation-system
-      namespace: openshift-marketplace
-    spec:
-      csDisplayName: Community Operators
-      csPublisher: Community
-      targetNamespace: kube-federation-system
-      packages: kubefed-operator
-    ---
-    EOF
-    ```
-3. Create the `OperatorGroup`
+## Deploy Gogs Server
 
-    ```sh
-    cat <<-EOF | oc apply -n kube-federation-system -f -
-    ---
-    apiVersion: operators.coreos.com/v1
-    kind: OperatorGroup
-    metadata:
-      name: kubefed
-    spec:
-      targetNamespaces:
-      - kube-federation-system
-    ---
-    EOF
-    ```
-4. Create the `Subscription`
+Gogs Git Server needs to be deployed to the first cluster.
 
-    ```sh
-    cat <<-EOF | oc apply -n kube-federation-system -f -
-    ---
-    apiVersion: operators.coreos.com/v1alpha1
-    kind: Subscription
-    metadata:
-      name: federation
-    spec:
-      channel: alpha
-      installPlanApproval: Manual
-      name: kubefed-operator
-      package: kubefed-operator
-      startingCSV: kubefed-operator.v0.1.0
-      source: installed-kubefed-kube-federation-system
-      sourceNamespace: kube-federation-system
-    ---
-    EOF
-    ```
-5. Approve the `InstallPlan` (It may take some time to be created)
+Steps to deploy Gogs can be found in [this AgnosticD role](https://github.com/redhat-cop/agnosticd/tree/development/ansible/roles/ocp4-workload-rhte-kubefed-app-portability)
 
-    ```sh
-    oc -n kube-federation-system get installplan
-    oc -n kube-federation-system patch installplan <installplan_name> --type merge -p '{"spec":{"approved":true}}'
-    ```
-6. Wait `ClusterServiceVersion` to succeed (it may take some time to Succeed)
+## Helper Scripts
 
-    ```sh
-    oc -n kube-federation-system get csv
-    ```
+Helper Scripts should be deployed under `/usr/local/bin` on the Client VM used by the Student to run the lab.
+
+The Helper Scripts can be found [here](https://github.com/redhat-cop/agnosticd/tree/development/ansible/roles/ocp4-workload-rhte-kubefed-app-portability/files)
