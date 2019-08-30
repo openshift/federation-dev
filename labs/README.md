@@ -2,7 +2,7 @@
 
 This page contains a series of labs to be conducted during Red Hat Tech exchange.
 
-During the labs you will be deploying some federated workloads on three OpenShift 4 clusters that have been pre-deployed for you.
+During the labs you will be deploying workloads on three OpenShift 4 clusters that have been pre-deployed for you.
 
 If during the labs you need to start over check out the [cleanup instructions](./cleanup-instructions.md)
 
