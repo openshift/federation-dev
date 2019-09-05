@@ -29,10 +29,10 @@ In order to get started with the lab, click on **Lab 0 - Introduction**.
 * [Lab 2 - Login into OpenShift Clusters and Configure Context](./2.md)<br>
 * [Lab 3 - GitOps Introduction](./3.md)<br>
 * [Lab 4 - Deploying and Managing a Project with GitOps](./4.md)<br>
-* [Lab 5 - Deploying MongoDB](./5.md)<br>
-* [Lab 6 - Deploying Pacman](./6.md)<br>
-* [Lab 7 - Application Portability](./7.md)<br>
-* [Lab 8 - Convert a Namespace to a Federated Namespace](./8.md)<br>
+* [Lab 5 - Customizing Deployments](./5.md)<br>
+* [Lab 6 - Deploying MongoDB](./6.md)<br>
+* [Lab 7 - Deploying Pacman](./7.md)<br>
+* [Lab 8 - Application Portability](./8.md)<br>
 * [Lab 9 - Canary Deployments](./9.md)<br>
 * [Lab 10 - Disaster Recovery](./10.md)<br>
 * [Lab 11 - Wrap up](./11.md)<br>
