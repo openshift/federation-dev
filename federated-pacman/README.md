@@ -85,6 +85,12 @@ From the command line run the following command:
 cat <<-EOF | oc apply -n kube-federation-system -f -
 ---
 apiVersion: operator.kubefed.io/v1alpha1
+kind: KubeFedWebHook
+metadata:
+  name: kubefed-webhook-resource
+spec: 
+---
+apiVersion: operator.kubefed.io/v1alpha1
 kind: KubeFed
 metadata:
   name: kubefed-resource
