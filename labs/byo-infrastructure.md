@@ -56,4 +56,4 @@ Steps to deploy Gogs can be found in [this AgnosticD role](https://github.com/re
 
 Helper Scripts should be deployed under `/usr/local/bin` on the Client VM used by the Student to run the lab.
 
-The Helper Scripts can be found [here](https://github.com/redhat-cop/agnosticd/tree/development/ansible/roles/ocp4-workload-rhte-kubefed-app-portability/files)
+The Helper Scripts can be found [here](./utility/)
