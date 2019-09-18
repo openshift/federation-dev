@@ -9,7 +9,7 @@
 
 ### How is the installation different for cluster-scoped KubeFed?
 * We recommend to install the KubeFed Operator in single namespace mode, and use “kube-federation-system” as the namespace to watch as this is the default for the kubefedctl tool.
-* If using the KubeFed Operator, create a KubeFed Custom Resource in the chosen namespace, setting the “spec | scope” to “Cluster”.
+* If using the KubeFed Operator, create KubeFedWebHook and KubeFed Custom Resources in the chosen namespace, setting the “spec | scope” of the latter resource to “Cluster”.
 * Join cluster(s). If KubeFed is installed in the “kube-federation-system” namespace, there is no need to specify --kubefed-namespace parameter.
 * If necessary, enable additional resource types to federate, remembering that any namespaced resource types will also require that the “Namespaces” resource type itself be enabled. You can see a list of existing enabled types by using kubectl or oc to “get” federatedtypeconfigs from the kubefed namespace.
 * Federate any namespaces containing federated resources intended for propagation. 
