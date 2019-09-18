@@ -159,7 +159,13 @@ you will install the operator to watch all namespaces, the default mode.
    2. Click `Operator Subscriptions` tab.
    3. Ensure the `Status` is "Up to date" for the `kubefed-operator` subscription.
    4. Note the namespace the operator has installed into is openshift-operators
-5. Create a KubeFed resource to instantiate the KubeFed controller.
+5. Create a KubeFedWebHook resource.
+   1. On the left panel click `Catalog -> Installed Operators`.
+   2. Select `test-namespace` from the drop down list for Project
+   3. Click `Kubefed Operator`.
+   4. Under `Provided APIs`, find `KubeFedWebHook`, and click `Create New`.
+   5. The default values should be fine. Click `Create`.
+6. Create a KubeFed resource to instantiate the KubeFed controller.
    1. On the left panel click `Catalog -> Installed Operators`.
    2. Select `test-namespace` from the drop down list for Project
    3. Click `Kubefed Operator`.

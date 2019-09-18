@@ -160,7 +160,13 @@ namespaces starting with `kube` to be protected.
    1. On the left panel click `Catalog -> Operator Management`.
    2. Click `Operator Subscriptions` tab.
    3. Ensure the `Status` is "Up to date" for the `kubefed-operator` subscription. This process may take a few minutes.
-4. Create a KubeFed resource to instantiate the KubeFed controller.
+4. Create a KubeFedWebHook resource.
+   1. On the left panel click `Catalog -> Installed Operators`.
+   2. Click `Kubefed Operator`.
+   3. Under `Provided APIs`, find `KubeFedWebHook`, and click `Create New`.
+   4. The defaults should be fine here.
+   5. Click `Create`
+5. Create a KubeFed resource to instantiate the KubeFed controller.
    1. On the left panel click `Catalog -> Installed Operators`.
    2. Click `Kubefed Operator`.
    3. Under `Provided APIs`, find `KubeFed`, and click `Create New`.
