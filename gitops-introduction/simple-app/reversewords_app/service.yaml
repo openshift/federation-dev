@@ -12,4 +12,4 @@ spec:
     name: http
   selector:
     app: reverse-words
-  type: LoadBalancer
+  type: ClusterIP
