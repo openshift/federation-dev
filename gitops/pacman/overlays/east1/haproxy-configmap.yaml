@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haproxy
+  namespace: sku-pacman
+data:
+  haproxy: "#---------------------------------------------------------------------\n#
+    Example configuration for a possible web application.  See the\n# full configuration
+    options online.\n#\n#   http://haproxy.1wt.eu/download/1.4/doc/configuration.txt\n#\n#---------------------------------------------------------------------\n\n#---------------------------------------------------------------------\n#
+    Global settings\n#---------------------------------------------------------------------\nglobal\n
+    \   # to have these messages end up in /var/log/haproxy.log you will\n    # need
+    to:\n    #\n    # 1) configure syslog to accept network log events.  This is done\n
+    \   #    by adding the '-r' option to the SYSLOGD_OPTIONS in\n    #    /etc/sysconfig/syslog\n
+    \   #\n    # 2) configure local2 events to go to the /var/log/haproxy.log\n    #
+    \  file. A line like the following can be added to\n    #   /etc/sysconfig/syslog\n
+    \   #\n    #    local2.*                       /var/log/haproxy.log\n    #\n    log
+    \        127.0.0.1 local2\n\n    # unecessary since already in a container and
+    runs w/ a non-root user\n    # chroot      /var/lib/haproxy\n    # user        haproxy\n
+    \   # group       haproxy\n    # daemon\n\n    pidfile     /var/lib/haproxy/haproxy.pid\n
+    \   maxconn     4000\n\n#---------------------------------------------------------------------\n#
+    common defaults that all the 'listen' and 'backend' sections will\n# use if not
+    designated in their block\n#---------------------------------------------------------------------\ndefaults\n
+    \   mode                    http\n    log                     global\n    option
+    \                 httplog\n    option                  dontlognull\n    option
+    http-server-close\n    option forwardfor       except 127.0.0.0/8\n    option
+    \                 redispatch\n    retries                 2\n    timeout http-request
+    \   5s\n    timeout queue           1m\n    timeout connect         5000\n    timeout
+    client          30000\n    timeout server          30000\n    timeout http-keep-alive
+    10s\n    timeout check           5000\n    maxconn                 3000\n    default-server
+    \         init-addr last,libc,none\n\n#---------------------------------------------------------------------\n#
+    main frontend which proxys to the backends\n#---------------------------------------------------------------------\nfrontend
+    \ main\n    bind *:8080\n\n    default_backend             app\n\n#---------------------------------------------------------------------\n#
+    round robin balancing between the various backends\n#---------------------------------------------------------------------\nbackend
+    app\n    balance roundrobin\n    option httpchk GET / HTTP/1.1\\r\\nHost:\\ skuppman.sysdeseng.com\n
+    \   mode http \n        server east1 skuppman.apps.east-1.sysdeseng.com:80 check\n
+    \       server east2 skuppman.apps.east-2.sysdeseng.com:80 check\n        server
+    west2 skuppman.apps.west-1.sysdeseng.com:80 check\n\n"
