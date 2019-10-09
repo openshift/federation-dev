@@ -4,6 +4,34 @@ In this directory are applications for use with Argo CD and Kustomize
 to enable a GitOps workflow demonstrating our multicluster Pacman and MongoDB
 deployments.
 
+To use the structure, you would create three Argo CD application with arguments similar to:
+
+    argocd app create --project default \
+    --name skuppman-east1 \
+    --repo https://github.com/openshift/federation-dev \
+    --dest-namespace skuppman \
+    --revision master \
+    --sync-policy none \
+    --path gitops/pacman/overlays/east1 \
+    --dest-server https://kubernetes.default.svc
+
+    argocd app create --project default \
+    --name skuppman-east2 \
+    --repo https://github.com/openshift/federation-dev \
+    --dest-namespace skuppman \
+    --revision master \
+    --sync-policy none \
+    --path gitops/pacman/base \
+    --dest-server https://api.east-2.example.com:6443
+
+    argocd app create --project default \
+    --name skuppman-west2 \
+    --repo https://github.com/openshift/federation-dev \
+    --dest-namespace skuppman \
+    --revision master \
+    --sync-policy none \
+    --path gitops/pacman/base \
+    --dest-server https://api.west-2.example.com:6443
 
 ```
 .
