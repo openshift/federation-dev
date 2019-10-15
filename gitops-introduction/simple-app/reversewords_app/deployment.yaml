@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reverse-words
+  labels:
+    app: reverse-words
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reverse-words
+  template:
+    metadata:
+      labels:
+        app: reverse-words
+    spec:
+      containers:
+      - name: reverse-words
+        image: quay.io/mavazque/reversewords:v0.0.2
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: RELEASE
+          value: "Base release"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+          periodSeconds: 15
