@@ -309,11 +309,12 @@ setup_gogs()
   fi
   echo "Deploying Gogs Git Server on feddemocl1 cluster in namespace ${GOGS_NAMESPACE}"
   GOGS_ROUTE=gogs-demo.${WILDCARD_DOMAIN_CL1}
-  run_ok_or_fail "oc process -f yaml-resources/gogs/gogs-persistent-template.yaml -p HOSTNAME="${GOGS_ROUTE}" | oc --context feddemocl1 -n ${GOGS_NAMESPACE} apply -f -" "0" "1"
-  wait_for_deployment_ready "feddemocl1" "${GOGS_NAMESPACE}" "gogs-postgresql" "1"
-  wait_for_deployment_ready "feddemocl1" "${GOGS_NAMESPACE}" "gogs" "1"
+  run_ok_or_fail "oc --context feddemocl1 -n ${GOGS_NAMESPACE} apply -f yaml-resources/gogs/postgres.yaml"
+  wait_for_deployment_ready "feddemocl1" "${GOGS_NAMESPACE}" "postgres" "0"
+  run_ok_or_fail 'cat yaml-resources/gogs/gogs.yaml | sed "s/changeMe/${GOGS_ROUTE}/g" | oc --context feddemocl1 -n ${GOGS_NAMESPACE} apply -f -' "0" "1"
+  wait_for_deployment_ready "feddemocl1" "${GOGS_NAMESPACE}" "gogs" "0"
   echo "Initializing Gogs User"
-  GOGS_POD=$(oc --context feddemocl1 -n ${GOGS_NAMESPACE} get pod -l app=gogs -o jsonpath='{.items[*].metadata.name}')
+  GOGS_POD=$(oc --context feddemocl1 -n ${GOGS_NAMESPACE} get pod -l name=gogs -o jsonpath='{.items[*].metadata.name}')
   run_ok_or_fail 'oc --context feddemocl1 -n ${GOGS_NAMESPACE} exec ${GOGS_POD} init-gogs "demouser" "demouser" "demouser@d3m0.com"' "0" "1"
   echo "Initializing Git Demo Repository"
   GOGS_TOKEN_OUTPUT=$(curl -s -X POST -H 'Content-Type: application/json' --data '{"name":"api"}' "http://demouser:demouser@$GOGS_ROUTE/api/v1/users/demouser/tokens")

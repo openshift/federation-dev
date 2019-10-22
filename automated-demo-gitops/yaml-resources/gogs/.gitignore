@@ -2,4 +2,5 @@
 *
 # Except this file
 !.gitignore
-!gogs-persistent-template.yaml
+!gogs.yaml
+!postgres.yaml
