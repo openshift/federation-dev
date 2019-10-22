@@ -1,0 +1,8 @@
+commonLabels:
+  org: RHTE
+commonAnnotations:
+  cluster: cluster2
+bases:
+- ../../base
+patchesStrategicMerge:
+- mongo-route.yaml

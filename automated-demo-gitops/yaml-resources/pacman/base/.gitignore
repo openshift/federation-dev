@@ -1,0 +1,13 @@
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+!kustomization.yaml
+!pacman-cluster-role-binding.yaml
+!pacman-cluster-role.yaml
+!pacman-deployment.yaml
+!pacman-namespace.yaml
+!pacman-route.yaml
+!pacman-secret.yaml
+!pacman-service-account.yaml
+!pacman-service.yaml
