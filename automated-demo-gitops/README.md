@@ -6,7 +6,7 @@ This demo is intended to be used during OpenShift & GitOps presentations.
 
 * oc tool installed on your local machine
 * git and openssl commands available on your local machine
-* 3 existing OCP 4.1/3.11 clusters and a user with admin access
+* 3 existing OCP 4.X/3.11 clusters and a user with admin access
 
 ## How-to
 
