@@ -4,7 +4,7 @@
 ARGOCD_NAMESPACE="argocd"
 GOGS_NAMESPACE="federation-demo-gogs"
 HAPROXY_NAMESPACE="federation-demo-haproxy"
-ARGOCD_RELEASE="v1.2.2"
+ARGOCD_RELEASE="v1.3.6"
 
 usage()
 {

@@ -5,7 +5,7 @@ This document explains how the automated demo works under the hood.
 ## Software Versions
   - MongoDB Version: v4.1.5, Git Version: f3349bac21f200cf2f9854eb51b359d3cbee3617
   - OpenShift Version: v4.1, Kubernetes: v1.13.4+8cd4e29
-  - Argo CD Version: v1.2.2
+  - Argo CD Version: v1.3.6
 
 ## Diagrams
 
