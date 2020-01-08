@@ -1,6 +1,6 @@
-# Red Hat Tech Exchange Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability
+# Red Hat Lab - Hands on with Red Hat Multi-Cluster Federation: Application Portability
 
-This page contains a series of labs to be conducted during Red Hat Tech exchange.
+This page contains a series of labs to be conducted during a Red Hat hosted lab.
 
 During the labs you will be deploying workloads on three OpenShift 4 clusters that have been pre-deployed for you.
 

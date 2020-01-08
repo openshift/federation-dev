@@ -2,7 +2,7 @@
 
 # BYO Infrastructure
 
-This lab is prepared for the Red Hat Tech Exchange 2019 event.
+This lab is prepared for a Red Hat hosted event.
 
 For this lab users are presented with pre-existing infrastructure as well as some automation mechanisms.
 
