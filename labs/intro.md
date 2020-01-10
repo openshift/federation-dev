@@ -3,7 +3,7 @@
 
 ## Getting your dedicated lab environments using Guid Grabber
 
-On your laptop, you **MUST** open <span style="color:red">**THREE**</span> browser tabs to [*Lab GUID Assignment page*](https://www.opentlc.com/gg/gg.cgi?profile=generic_rhte) before continuing with the lab instructions:
+On your laptop, you **MUST** open <span style="color:red">**THREE**</span> browser tabs to [*Lab GUID Assignment page*](http://bit.ly/devconf-gg) before continuing with the lab instructions:
 
 * From this page, you will be assigned your unique GUID, which you will use to access your unique lab environment and systems.
 * For this lab you will need three different environments, pay attention while selecting the *Lab Code* from the drop down list.
@@ -16,7 +16,7 @@ This will be your main environment where most of the work will be done.
 
 From the drop down list:
 
-1. Choose the lab `A0004-A - Hands on with Red Hat Multi-Cluster Federation: Application Portability`
+1. Choose the lab `L0001 - Hands on with Red Hat Multi-Cluster Federation: Application Portability - A`
 2. Enter the activation key shared by the instructors
 3. Enter your email address
 4. Click submit
@@ -36,7 +36,7 @@ Your unique GUID will also be embedded in your lab environment's host names.
 
 From the drop down list:
 
-1. Choose the lab `A0004-B - Hands on with Red Hat Multi-Cluster Federation: Application Portability`
+1. Choose the lab `L0002 - Hands on with Red Hat Multi-Cluster Federation: Application Portability - B`
 2. Enter the activation key shared by the instructors
 3. Enter your email address
 4. Click submit
@@ -46,7 +46,7 @@ From the drop down list:
 
 From the drop down list:
 
-1. Choose the lab `A0004-C - Hands on with Red Hat Multi-Cluster Federation: Application Portability`
+1. Choose the lab `L0003 - Hands on with Red Hat Multi-Cluster Federation: Application Portability - C`
 2. Enter the activation key shared by the instructors
 3. Enter your email address
 4. Click submit
