@@ -4,8 +4,8 @@ This document explains how the automated demo works under the hood.
 
 ## Software Versions
   - MongoDB Version: v4.1.5, Git Version: f3349bac21f200cf2f9854eb51b359d3cbee3617
-  - OpenShift Version: v4.1, Kubernetes: v1.13.4+8cd4e29
-  - Argo CD Version: v1.3.6
+  - OpenShift Version: v4.5.4
+  - RH ACM Version: v2.0.0
 
 ## Diagrams
 
@@ -46,9 +46,9 @@ In the event that one of the MongoDB pods fails / stops, the MongoDB ReplicaSet 
 
 ## Demo Steps
 
-### Argo CD Initialization + TLS Certificates Generation
-1. Based on the info provided via the `inventory.json` file or via the standard input, three different contexts will be created on the `oc` tool configuration.
-2. Once the contexts are created, the script will create a new namespace and deploy Argo CD and Gogs Git Server
+### RH ACM Initialization + TLS Certificates Generation
+1. Based on the info provided via the `inventory.json` file or via the standard input, four different contexts will be created on the `oc` tool configuration.
+2. Once the contexts are created, the script will check if ACM is deployed and will deploy a Gogs Git Server
 3. The MongoDB replicas will communicate with each other using TLS, so the demo script will create the required CA and Certificates for this to happen
 4. Once we have the required certificates, the demo script will generate some yaml files which need to include those certificates and will push the new files to the Git repository on Gogs
 5. At this point, we will have the namespace distributed across the three different clusters and the demo script will start deploying the federated MongoDB ReplicaSet
