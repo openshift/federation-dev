@@ -1,0 +1,14 @@
+apiVersion: apps.open-cluster-management.io/v1
+kind: Subscription
+metadata:
+  name: pacman-cluster2-app-subscription
+  labels:
+    app: pacman-cluster2-app
+  annotations:
+    apps.open-cluster-management.io/git-path: pacman/overlays/cluster2
+spec:
+  channel: demoNS/autodemo-gitops-gogs
+  placement:
+    placementRef:
+      kind: PlacementRule
+      name: cluster2

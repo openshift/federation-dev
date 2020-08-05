@@ -1,0 +1,7 @@
+apiVersion: apps.open-cluster-management.io/v1
+kind: Channel
+metadata:
+  name: autodemo-gitops-gogs
+spec:
+  type: Git
+  pathname: gitreporoute

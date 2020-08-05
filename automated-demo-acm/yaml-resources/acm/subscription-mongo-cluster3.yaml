@@ -1,0 +1,14 @@
+apiVersion: apps.open-cluster-management.io/v1
+kind: Subscription
+metadata:
+  name: mongo-cluster3-app-subscription
+  labels:
+    app: mongo-cluster3-app
+  annotations:
+    apps.open-cluster-management.io/git-path: mongo/overlays/cluster3
+spec:
+  channel: demoNS/autodemo-gitops-gogs
+  placement:
+    placementRef:
+      kind: PlacementRule
+      name: cluster3

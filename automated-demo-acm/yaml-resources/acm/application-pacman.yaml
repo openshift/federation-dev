@@ -1,0 +1,20 @@
+apiVersion: app.k8s.io/v1beta1
+kind: Application
+metadata:
+  name: pacman-multicluster
+spec:
+  componentKinds:
+  - group: apps.open-cluster-management.io
+    kind: Subscription
+  descriptor: {}
+  selector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values:
+      - mongo-cluster1-app
+      - mongo-cluster2-app
+      - mongo-cluster3-app
+      - pacman-cluster1-app
+      - pacman-cluster2-app
+      - pacman-cluster3-app

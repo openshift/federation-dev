@@ -1,0 +1,15 @@
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+!application-pacman.yaml
+!git-channel.yaml
+!placementrule-cluster1.yaml
+!placementrule-cluster2.yaml
+!placementrule-cluster3.yaml
+!subscription-mongo-cluster1.yaml
+!subscription-mongo-cluster2.yaml
+!subscription-mongo-cluster3.yaml
+!subscription-pacman-cluster1.yaml
+!subscription-pacman-cluster2.yaml
+!subscription-pacman-cluster3.yaml
